@@ -1,0 +1,352 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "陪诊系统API - 新增接口",
+    "version": "1.1.0",
+    "description": "陪诊系统新增接口 - 陪诊师工作台相关功能"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "API基础路径"
+    }
+  ],
+  "security": [
+    {
+      "tokenAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "tokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "token",
+        "description": "JWT令牌认证"
+      }
+    },
+    "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "description": "统一响应格式",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "响应码：1=成功，0=失败"
+          },
+          "msg": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "description": "响应数据"
+          }
+        },
+        "required": ["code"]
+      },
+      "PaginatedResult": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "总数"
+          },
+          "list": {
+            "type": "array",
+            "description": "数据列表"
+          }
+        },
+        "required": ["total", "list"]
+      },
+      "CompanionStatistics": {
+        "type": "object",
+        "description": "陪诊师统计数据",
+        "properties": {
+          "todayIncome": {
+            "type": "number",
+            "format": "double",
+            "description": "今日收入"
+          },
+          "todayOrders": {
+            "type": "integer",
+            "description": "今日订单数"
+          },
+          "rating": {
+            "type": "number",
+            "format": "double",
+            "description": "服务评分"
+          },
+          "followers": {
+            "type": "integer",
+            "description": "被关注数"
+          },
+          "totalOrders": {
+            "type": "integer",
+            "description": "累计接单数"
+          },
+          "workDays": {
+            "type": "integer",
+            "description": "工作天数"
+          }
+        },
+        "required": ["todayIncome", "todayOrders", "rating", "followers", "totalOrders", "workDays"]
+      },
+      "IncomeRecord": {
+        "type": "object",
+        "description": "收入记录",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "记录ID"
+          },
+          "orderId": {
+            "type": "string",
+            "description": "订单ID"
+          },
+          "serviceName": {
+            "type": "string",
+            "description": "服务名称"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "金额"
+          },
+          "time": {
+            "type": "string",
+            "description": "时间",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "completed", "cancelled"],
+            "description": "状态：pending-待结算/completed-已完成/cancelled-已取消"
+          }
+        },
+        "required": ["id", "orderId", "serviceName", "amount", "time", "status"]
+      }
+    }
+  },
+  "paths": {
+    "/companion/statistics": {
+      "get": {
+        "tags": ["陪诊师工作台"],
+        "summary": "获取陪诊师统计数据",
+        "description": "获取陪诊师的统计数据，包括今日收入、订单数、评分等",
+        "security": [{"tokenAuth": []}],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CompanionStatistics"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "example": {
+                "code": 1,
+                "msg": "success",
+                "data": {
+                  "todayIncome": 280.00,
+                  "todayOrders": 3,
+                  "rating": 5.0,
+                  "followers": 365,
+                  "totalOrders": 128,
+                  "workDays": 100
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companion/income": {
+      "get": {
+        "tags": ["陪诊师工作台"],
+        "summary": "获取陪诊师收入明细",
+        "description": "获取陪诊师的收入明细记录",
+        "security": [{"tokenAuth": []}],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PaginatedResult"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "example": {
+                "code": 1,
+                "msg": "success",
+                "data": {
+                  "total": 8,
+                  "list": [
+                    {
+                      "id": 1,
+                      "orderId": "ORD001",
+                      "serviceName": "全程陪诊",
+                      "amount": 198.00,
+                      "time": "2024-03-21 14:30:00",
+                      "status": "completed"
+                    },
+                    {
+                      "id": 2,
+                      "orderId": "ORD002",
+                      "serviceName": "半天陪诊",
+                      "amount": 128.00,
+                      "time": "2024-03-21 10:00:00",
+                      "status": "completed"
+                    },
+                    {
+                      "id": 3,
+                      "orderId": "ORD003",
+                      "serviceName": "夜间陪诊",
+                      "amount": 268.00,
+                      "time": "2024-03-20 22:00:00",
+                      "status": "completed"
+                    },
+                    {
+                      "id": 4,
+                      "orderId": "ORD004",
+                      "serviceName": "单次陪同",
+                      "amount": 88.00,
+                      "time": "2024-03-20 15:30:00",
+                      "status": "completed"
+                    },
+                    {
+                      "id": 5,
+                      "orderId": "ORD005",
+                      "serviceName": "尊享陪诊",
+                      "amount": 588.00,
+                      "time": "2024-03-19 09:00:00",
+                      "status": "completed"
+                    },
+                    {
+                      "id": 6,
+                      "orderId": "ORD006",
+                      "serviceName": "全天陪诊",
+                      "amount": 368.00,
+                      "time": "2024-03-18 14:00:00",
+                      "status": "completed"
+                    },
+                    {
+                      "id": 7,
+                      "orderId": "ORD007",
+                      "serviceName": "半天陪诊",
+                      "amount": 198.00,
+                      "time": "2024-03-17 11:00:00",
+                      "status": "completed"
+                    },
+                    {
+                      "id": 8,
+                      "orderId": "ORD008",
+                      "serviceName": "全程陪诊",
+                      "amount": 198.00,
+                      "time": "2024-03-16 16:00:00",
+                      "status": "completed"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companion/status": {
+      "post": {
+        "tags": ["陪诊师工作台"],
+        "summary": "更新陪诊师在线状态",
+        "description": "更新陪诊师的在线接单状态",
+        "security": [{"tokenAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["isOnline"],
+                "properties": {
+                  "isOnline": {
+                    "type": "boolean",
+                    "description": "在线状态：true-接单中，false-休息中"
+                  }
+                }
+              },
+              "example": {
+                "isOnline": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                },
+                "example": {
+                  "code": 1,
+                  "msg": "success",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "陪诊师工作台",
+      "description": "陪诊师工作台相关接口"
+    }
+  ]
+}
