@@ -11,14 +11,18 @@
 
       <!-- Basic Info -->
       <div class="info-card">
-        <div class="price-row">
-          <span class="price">¥{{ service.price }}</span>
-          <span class="sales">已售 {{ service.sales }}</span>
-        </div>
-        <div class="title">{{ service.name }}</div>
-        <div class="duration-row">
-          <el-icon><Clock /></el-icon>
-          <span class="duration-text">服务时长：{{ service.duration || '2小时' }}</span>
+        <div class="info-content">
+          <div class="left-section">
+            <span class="title">{{ service.name }}</span>
+            <span class="price">¥{{ service.price }}</span>
+          </div>
+          <div class="right-section">
+            <span class="sales">已售 {{ service.sales }}</span>
+            <div class="duration-row">
+              <el-icon><Clock /></el-icon>
+              <span class="duration-text">{{ service.duration || '2小时' }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -84,7 +88,7 @@
 defineOptions({
   name: 'service',
 })
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Clock } from '@element-plus/icons-vue'
 import CompanionSelector from '@/components/appointment/CompanionSelector.vue'
@@ -142,8 +146,19 @@ onMounted(() => {
   }
 })
 
-const hasCompanion = computed(() => !!route.query.companionId)
-const isFromOrderCreate = computed(() => route.query.from === 'order-create')
+const hasCompanion = ref(!!route.query.companionId)
+const isFromOrderCreate = ref(route.query.from === 'order-create')
+
+watch(
+  () => route.query,
+  (newQuery) => {
+    // 只在当前页面路由更新时更新状态，避免跳转到其他页面（如登录页）时状态重置导致 UI 闪烁
+    if (route.name === 'service') {
+      hasCompanion.value = !!newQuery.companionId
+      isFromOrderCreate.value = newQuery.from === 'order-create'
+    }
+  },
+)
 
 const handleBook = () => {
   if (!userStore.isLogin) {
@@ -244,37 +259,54 @@ const handleCompanionSelect = (companion: any) => {
   padding: 15px;
   margin-bottom: 10px;
 
-  .price-row {
+  .info-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+  }
+
+  .left-section {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    margin-right: 15px;
+
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-right: 8px;
+      line-height: 1.4;
+    }
 
     .price {
       color: #f56c6c;
-      font-size: 24px;
+      font-size: 25px;
       font-weight: bold;
+      line-height: 1;
     }
+  }
+
+  .right-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
 
     .sales {
       color: #999;
       font-size: 12px;
+      margin-bottom: 8px;
     }
-  }
 
-  .title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-  }
-
-  .duration-row {
-    display: flex;
-    align-items: center;
-    color: #666;
-    font-size: 13px;
-    gap: 5px;
+    .duration-row {
+      display: flex;
+      align-items: center;
+      color: #666;
+      font-size: 13px;
+      gap: 4px;
+      white-space: nowrap;
+    }
   }
 }
 

@@ -4,7 +4,6 @@
     @update:model-value="$emit('update:visible', $event)"
     :with-header="false"
     direction="btt"
-    size="85%"
     class="companion-drawer"
   >
     <div class="drawer-container">
@@ -140,12 +139,27 @@ const goToDetail = (id: number) => {
 }
 </script>
 
+<style lang="scss">
+.el-drawer.btt.companion-drawer {
+  height: auto !important;
+  max-height: 550px !important;
+  border-radius: 16px 16px 0 0;
+
+  .el-drawer__body {
+    padding: 0 !important;
+    overflow: hidden !important; /* Prevent body scroll */
+  }
+}
+</style>
+
 <style scoped lang="scss">
 .drawer-container {
-  height: 100%;
   display: flex;
   flex-direction: column;
   background-color: #f7f8fa;
+  max-height: 550px;
+  height: 100%; /* Ensure it fills the drawer */
+  overflow: hidden; /* Prevent container scroll */
 }
 
 .drawer-header {
@@ -183,7 +197,7 @@ const goToDetail = (id: number) => {
 .companion-list {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 15px;
+  padding: 10px 15px 30px; /* Increase bottom padding */
   display: flex;
   flex-direction: column;
   gap: 10px;

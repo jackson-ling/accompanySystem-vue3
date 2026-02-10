@@ -1,48 +1,51 @@
 <template>
   <div class="order-create-page">
+    <div class="header-nav">
+      <el-icon @click="router.back()" class="back-icon"><ArrowLeft /></el-icon>
+      <span>填写订单</span>
+      <div style="width: 24px"></div>
+    </div>
     <div class="scroll-container">
-      <div class="header-nav">
-        <el-icon @click="router.back()" class="back-icon"><ArrowLeft /></el-icon>
-        <span>填写订单</span>
-        <div style="width: 24px"></div>
-      </div>
-
       <!-- Companion Info -->
       <div class="section-card" @click="handleCompanionCardClick">
         <div class="card-title">陪诊师</div>
         <div v-if="selectedCompanion" class="companion-card-inner horizontal-layout">
-          <el-avatar :size="50" :src="selectedCompanion.avatar" class="avatar" />
-          <div class="info-content">
-            <div class="top-row">
-              <span class="name">{{ selectedCompanion.name }}</span>
-              <el-icon v-if="selectedCompanion.gender === 'female'" class="gender-icon female"
-                ><Female
-              /></el-icon>
-              <el-icon v-else class="gender-icon male"><Male /></el-icon>
-              <span class="age" v-if="selectedCompanion.age">{{ selectedCompanion.age }}</span>
-              <span class="experience-tag" v-if="selectedCompanion.experience">{{
-                selectedCompanion.experience
-              }}</span>
-            </div>
-            <div class="stats-row">
-              <div class="stat-item">
-                <el-icon><Document /></el-icon>
-                <span>{{ (selectedCompanion.orders ?? 0) + '单' }}</span>
-              </div>
-              <div class="stat-item">
-                <el-icon><ChatLineRound /></el-icon>
-                <span>{{ selectedCompanion.comments ?? 0 }}</span>
-              </div>
-            </div>
+          <div class="card-left">
+            <el-avatar :size="60" :src="selectedCompanion.avatar" class="avatar" />
           </div>
-          <div class="rating-section">
-            <el-rate
-              v-model="selectedCompanion.rating"
-              disabled
-              text-color="#F7BA2A"
-              size="small"
-              score-template="{value}"
-            />
+          <div class="card-right">
+            <div class="info-content">
+              <div class="top-row">
+                <span class="name">{{ selectedCompanion.name }}</span>
+                <el-icon v-if="selectedCompanion.gender === 'female'" class="gender-icon female"
+                  ><Female
+                /></el-icon>
+                <el-icon v-else class="gender-icon male"><Male /></el-icon>
+                <span class="age" v-if="selectedCompanion.age">{{ selectedCompanion.age }}</span>
+                <span class="experience-tag" v-if="selectedCompanion.experience">{{
+                  selectedCompanion.experience
+                }}</span>
+              </div>
+              <div class="stats-row">
+                <div class="stat-item">
+                  <el-icon><Document /></el-icon>
+                  <span>{{ (selectedCompanion.orders ?? 0) + '单' }}</span>
+                </div>
+                <div class="stat-item">
+                  <el-icon color="#F7BA2A"><StarFilled /></el-icon>
+                  <span class="score-text">{{ selectedCompanion.score || 5.0 }}</span>
+                </div>
+                <div class="stat-item">
+                  <el-icon><ChatLineRound /></el-icon>
+                  <span>{{ selectedCompanion.comments ?? 0 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="action-column">
+              <div class="view-details">
+                查看详情 <el-icon><ArrowRight /></el-icon>
+              </div>
+            </div>
           </div>
         </div>
         <div v-else class="empty-selection">
@@ -66,7 +69,7 @@
             </div>
           </div>
           <div class="switch-action">
-            <span>切换</span>
+            <span>重新选择</span>
             <el-icon class="arrow-icon"><ArrowRight /></el-icon>
           </div>
         </div>
@@ -96,15 +99,15 @@
 
       <!-- Service Time -->
       <div class="section-card" @click="openTimeSelector">
-        <div class="card-title">服务时间</div>
-        <div v-if="appointmentTime" class="selected-time">
-          {{ formattedServiceTime }}
+        <div class="service-time-container">
+          <div class="card-title" style="margin-bottom: 0">服务时间</div>
+          <div class="right-content">
+            <span v-if="appointmentTime" class="selected-time">{{ formattedServiceTime }}</span>
+            <div class="select-prompt">
+              <span class="action-text"> &gt; 选择时间</span>
+            </div>
+          </div>
         </div>
-        <div v-else class="empty-selection">
-          <span>请选择服务时间</span>
-          <el-icon><ArrowRight /></el-icon>
-        </div>
-        <div class="tip">可预约未来7天内的时间，24小时服务</div>
       </div>
 
       <!-- Pickup Option -->
@@ -119,8 +122,10 @@
         <el-input
           v-model="remarks"
           type="textarea"
-          placeholder="请输入您的特殊需求..."
+          placeholder="请填写订单备注（选填，不超过100字）"
           :rows="3"
+          maxlength="100"
+          show-word-limit
           class="remarks-input"
         />
       </div>
@@ -131,14 +136,19 @@
         <el-radio-group v-model="paymentMethod" class="payment-group">
           <el-radio value="wechat" border class="payment-radio">
             <div class="payment-label">
-              <el-icon color="#09BB07" size="20"><ChatDotRound /></el-icon>
-              <span>微信支付</span>
+              <div class="label-left">
+                <el-icon color="#09BB07" size="20"><ChatDotRound /></el-icon>
+                <span>微信支付</span>
+              </div>
             </div>
           </el-radio>
           <el-radio value="balance" border class="payment-radio">
             <div class="payment-label">
-              <el-icon color="#E6A23C" size="20"><Wallet /></el-icon>
-              <span>账户余额 <span style="font-size: 12px; color: #999">余额0元</span></span>
+              <div class="label-left">
+                <el-icon color="#E6A23C" size="20"><Wallet /></el-icon>
+                <span>账户余额</span>
+              </div>
+              <span class="balance-info">余额 {{ userStore.userInfo?.balance || 0 }} 元</span>
             </div>
           </el-radio>
         </el-radio-group>
@@ -183,16 +193,22 @@
         </div>
 
         <!-- Right Content: Time Slots -->
-        <div class="time-content">
+        <div class="time-content" ref="timeContentRef">
           <div v-if="availableTimes.length > 0" class="time-grid">
             <div
-              v-for="(time, index) in availableTimes"
+              v-for="(slot, index) in availableTimes"
               :key="index"
               class="time-slot"
-              :class="{ active: selectedTimeSlot === time }"
-              @click="selectTime(time)"
+              :class="{
+                active: isSlotSelected(slot),
+                disabled: slot.status === 'booked',
+              }"
+              @click="selectTime(slot)"
             >
-              {{ time }}
+              <div class="time-text">{{ slot.time }}</div>
+              <div class="status-text">
+                {{ slot.status === 'booked' ? '已预约' : '可预约' }}
+              </div>
             </div>
           </div>
           <div v-else class="no-time">暂无可用时间</div>
@@ -211,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import { storeToRefs } from 'pinia'
@@ -227,6 +243,7 @@ import {
   Location,
   Document,
   Star,
+  StarFilled,
   ChatLineRound,
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
@@ -242,8 +259,14 @@ const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const orderStore = useOrderStore()
-const { selectedService, selectedCompanion, appointmentTime, pickupOption, remarks, paymentMethod } =
-  storeToRefs(orderStore)
+const {
+  selectedService,
+  selectedCompanion,
+  appointmentTime,
+  pickupOption,
+  remarks,
+  paymentMethod,
+} = storeToRefs(orderStore)
 
 const pickupOptions = [
   { label: '否', value: 'none' },
@@ -293,7 +316,7 @@ async function fetchData() {
   try {
     const [servicesRes, companionsRes] = await Promise.allSettled([
       getServices(),
-      getCompanions({ page: 1, size: 50 })
+      getCompanions({ page: 1, size: 50 }),
     ])
 
     if (servicesRes.status === 'fulfilled') {
@@ -363,7 +386,9 @@ const navigateToServiceDetail = () => {
 const dateList = ref<any[]>([])
 const selectedDateIndex = ref(0)
 const selectedTimeSlot = ref('')
-const availableTimes = ref<string[]>([])
+const selectedDateForTime = ref('')
+const availableTimes = ref<{ time: string; status: string }[]>([])
+const timeContentRef = ref<HTMLElement | null>(null)
 
 const generateDates = () => {
   const dates = []
@@ -371,9 +396,11 @@ const generateDates = () => {
   for (let i = 0; i < 7; i++) {
     const d = new Date()
     d.setDate(d.getDate() + i)
+    const realWeek = weeks[d.getDay()]
     dates.push({
       date: d,
-      week: i === 0 ? '今天' : i === 1 ? '明天' : weeks[d.getDay()],
+      week: i === 0 ? '今天' : realWeek,
+      realWeek: realWeek,
       dateStr: `${d.getMonth() + 1}-${d.getDate()}`,
     })
   }
@@ -407,7 +434,12 @@ const generateTimes = (dateIndex: number) => {
   for (let h = startHour; h < 24; h++) {
     for (let m = h === startHour ? startMinute : 0; m < 60; m += 30) {
       const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
-      times.push(timeStr)
+      // Mock random booked status (e.g., if hour is 10 or 14)
+      const isBooked = (h === 10 && m === 0) || (h === 14 && m === 30)
+      times.push({
+        time: timeStr,
+        status: isBooked ? 'booked' : 'available',
+      })
     }
   }
   availableTimes.value = times
@@ -415,21 +447,64 @@ const generateTimes = (dateIndex: number) => {
 
 const openTimeSelector = () => {
   generateDates()
+  if (selectedDateForTime.value) {
+    const idx = dateList.value.findIndex((d) => d.dateStr === selectedDateForTime.value)
+    if (idx !== -1) {
+      selectedDateIndex.value = idx
+    } else {
+      selectedDateIndex.value = 0
+    }
+  } else {
+    selectedDateIndex.value = 0
+  }
+  generateTimes(selectedDateIndex.value)
   showTimeSelector.value = true
+  scrollToSelection()
+}
+
+const scrollToSelection = () => {
+  nextTick(() => {
+    if (!timeContentRef.value) return
+
+    const currentDateStr = dateList.value[selectedDateIndex.value].dateStr
+    // Check if current view contains the selected time
+    if (selectedDateForTime.value === currentDateStr && selectedTimeSlot.value) {
+      // Find active element
+      const activeEl = timeContentRef.value.querySelector('.time-slot.active') as HTMLElement
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    } else {
+      timeContentRef.value.scrollTop = 0
+    }
+  })
 }
 
 const selectDate = (index: number) => {
   selectedDateIndex.value = index
   generateTimes(index)
+  scrollToSelection()
 }
 
-const selectTime = (time: string) => {
-  selectedTimeSlot.value = time
-  const date = dateList.value[selectedDateIndex.value].dateStr
+const isSlotSelected = (slot: { time: string; status: string }) => {
+  return (
+    selectedTimeSlot.value === slot.time &&
+    selectedDateForTime.value === dateList.value[selectedDateIndex.value].dateStr
+  )
+}
+
+const selectTime = (slot: { time: string; status: string }) => {
+  if (slot.status === 'booked') return
+  selectedTimeSlot.value = slot.time
+  const dateItem = dateList.value[selectedDateIndex.value]
+  const dateStr = dateItem.dateStr
+  selectedDateForTime.value = dateStr
+  // Use realWeek even if it's today
+  const week = dateItem.realWeek
 
   // Delay closing to show selection state and prevent flicker
   setTimeout(() => {
-    appointmentTime.value = `${date} ${time}`
+    appointmentTime.value = `${dateStr} ${week} ${slot.time}`
     showTimeSelector.value = false
   }, 150)
 }
@@ -460,7 +535,7 @@ const handlePay = () => {
     ElMessageBox.alert('支付成功！我们将尽快为您安排服务。', '提示', {
       confirmButtonText: '确定',
       callback: () => {
-        router.push('/')
+        router.push({ name: 'order-list', query: { status: '2' } })
       },
     })
   }, 1500)
@@ -535,80 +610,104 @@ const handlePay = () => {
       flex-direction: row;
       align-items: center;
       padding: 10px 0;
+      gap: 12px;
 
       .avatar {
-        margin-right: 15px;
+        margin-right: 0;
         flex-shrink: 0;
       }
 
-      .info-content {
+      .card-left {
+        flex-shrink: 0;
+      }
+
+      .card-right {
         flex: 1;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 6px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
 
-        .top-row {
+        .info-content {
+          flex: 1;
           display: flex;
-          align-items: center;
+          flex-direction: column;
+          justify-content: center;
+          gap: 6px;
 
-          .name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-right: 8px;
-          }
-
-          .gender-icon {
-            font-size: 14px;
-            margin-right: 8px;
-
-            &.female {
-              color: #f56c6c;
-            }
-            &.male {
-              color: #409eff;
-            }
-          }
-
-          .age {
-            font-size: 13px;
-            color: #999;
-            margin-right: 8px;
-          }
-
-          .experience-tag {
-            font-size: 11px;
-            color: #fff;
-            background-color: #409eff;
-            padding: 1px 6px;
-            border-radius: 4px;
-          }
-        }
-
-        .stats-row {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          margin-top: 4px;
-
-          .stat-item {
+          .top-row {
             display: flex;
             align-items: center;
-            font-size: 12px;
-            color: #909399;
-            gap: 4px;
 
-            .el-icon {
+            .name {
+              font-size: 16px;
+              font-weight: 600;
+              color: #333;
+              margin-right: 8px;
+            }
+
+            .gender-icon {
               font-size: 14px;
+              margin-right: 8px;
+
+              &.female {
+                color: #f56c6c;
+              }
+              &.male {
+                color: #409eff;
+              }
+            }
+
+            .age {
+              font-size: 13px;
+              color: #999;
+              margin-right: 8px;
+            }
+
+            .experience-tag {
+              font-size: 11px;
+              color: #fff;
+              background-color: #409eff;
+              padding: 1px 6px;
+              border-radius: 4px;
+            }
+          }
+
+          .stats-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 4px;
+
+            .stat-item {
+              display: flex;
+              align-items: center;
+              font-size: 12px;
+              color: #909399;
+              gap: 4px;
+
+              .el-icon {
+                font-size: 14px;
+              }
             }
           }
         }
-      }
 
-      .rating-section {
-        flex-shrink: 0;
-        margin-left: 10px;
+        .action-column {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          flex-shrink: 0;
+
+          .view-details {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            color: #999;
+            cursor: pointer;
+          }
+        }
       }
     }
   }
@@ -717,12 +816,6 @@ const handlePay = () => {
   font-weight: bold;
 }
 
-.tip {
-  font-size: 12px;
-  color: #999;
-  margin-top: 10px;
-}
-
 /* Payment Styles */
 .payment-group {
   display: flex;
@@ -754,8 +847,22 @@ const handlePay = () => {
     .payment-label {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 10px;
       font-size: 16px;
+      width: 100%;
+
+      .label-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .balance-info {
+        font-size: 15px;
+        color: #999;
+        margin-right: 10px;
+      }
     }
 
     &.is-bordered {
@@ -765,6 +872,36 @@ const handlePay = () => {
     &.is-checked {
       border-color: #409eff;
       background-color: #ecf5ff;
+    }
+  }
+}
+
+/* Service Time Row */
+.service-time-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+
+  .right-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .select-prompt {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #999;
+    font-size: 14px;
+    cursor: pointer;
+
+    .action-text {
+      color: #999;
+      font-size: 13px;
     }
   }
 }
@@ -899,73 +1036,6 @@ const handlePay = () => {
   box-sizing: border-box;
 }
 
-.service-item-card {
-  width: 100%;
-  height: 110px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 15px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s;
-
-  &:active {
-    transform: scale(0.98);
-    background-color: #f5f7fa;
-  }
-
-  &.active {
-    border-color: #409eff;
-    background-color: #ecf5ff;
-  }
-
-  .s-image {
-    width: 60px;
-    height: 60px;
-    border-radius: 6px;
-    flex-shrink: 0;
-  }
-
-  .s-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    .s-name {
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 4px;
-    }
-
-    .s-desc {
-      font-size: 12px;
-      color: #999;
-      margin-bottom: 4px;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .s-price {
-      font-size: 16px;
-      color: #f56c6c;
-      font-weight: bold;
-    }
-  }
-}
-
 /* Time Selector Styles */
 :deep(.el-drawer__body) {
   padding: 0; /* Remove default padding */
@@ -1045,22 +1115,47 @@ const handlePay = () => {
     }
 
     .time-slot {
-      border: 1px solid #eee;
-      border-radius: 4px;
-      min-height: 48px; /* Increased to 48px for better touch target */
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      height: 60px;
+      border: 1px solid #eee;
+      border-radius: 8px;
       cursor: pointer;
-      box-sizing: border-box;
-      transition: all 0.2s ease-in-out; /* Smooth transition */
+      font-size: 15px;
+      color: #333;
+      transition: all 0.3s;
+
+      .time-text {
+        font-weight: bold;
+      }
+
+      .status-text {
+        font-size: 11px;
+        color: #67c23a;
+        margin-top: 2px;
+      }
 
       &.active {
         background-color: #ecf5ff;
         border-color: #409eff;
         color: #409eff;
-        font-weight: bold;
+
+        .status-text {
+          color: #409eff;
+        }
+      }
+
+      &.disabled {
+        background-color: #f5f7fa;
+        border-color: #e4e7ed;
+        color: #c0c4cc;
+        cursor: not-allowed;
+
+        .status-text {
+          color: #c0c4cc;
+        }
       }
     }
 

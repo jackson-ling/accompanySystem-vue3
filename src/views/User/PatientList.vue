@@ -6,7 +6,7 @@
       <div style="width: 24px"></div>
     </div>
 
-    <div class="patient-list">
+    <div class="patient-list" v-if="userStore.patients.length > 0">
       <div
         v-for="patient in userStore.patients"
         :key="patient.id"
@@ -40,6 +40,7 @@
         </div>
       </div>
     </div>
+    <el-empty v-else description="暂无就诊人" />
 
     <div class="bottom-action-bar">
       <el-button class="action-btn" @click="goToAdd">

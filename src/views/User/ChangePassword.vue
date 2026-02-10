@@ -62,6 +62,7 @@
             size="large"
             @click="submitPasswordChange"
             :loading="loading"
+            ref="submitBtnRef"
             >确认修改</el-button
           >
         </div>
@@ -79,6 +80,7 @@ import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 const router = useRouter()
 const passwordFormRef = ref<FormInstance>()
 const loading = ref(false)
+const submitBtnRef = ref()
 
 const passwordForm = reactive({
   oldPassword: '',
@@ -212,11 +214,26 @@ const submitPasswordChange = async () => {
   padding: 0 20px;
 
   .submit-btn {
-    width: 100%;
-    font-size: 16px;
-    height: 44px;
-    border-radius: 22px;
-  }
+      width: 100%;
+      font-size: 16px;
+      height: 44px;
+      border-radius: 22px;
+
+      /* 覆盖 Element Plus 默认的 hover/focus 样式，防止点击后颜色变浅（粘滞效果） */
+      &:hover,
+      &:focus {
+        background-color: var(--el-color-primary);
+        border-color: var(--el-color-primary);
+        color: var(--el-color-white);
+      }
+
+      /* 显式定义点击（按下）时的样式，确保有操作反馈 */
+      &:active {
+        background-color: var(--el-color-primary-dark-2);
+        border-color: var(--el-color-primary-dark-2);
+        color: var(--el-color-white);
+      }
+    }
 }
 
 :deep(.el-form-item) {

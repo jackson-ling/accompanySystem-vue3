@@ -13,7 +13,7 @@
           v-model="content"
           type="textarea"
           :rows="6"
-          placeholder="请填写您的问题或建议，我们将不断改进..."
+          placeholder="您的宝贵的建议，是我们不断进步的动力！请详细描述遇到的问题"
           resize="none"
           maxlength="500"
           show-word-limit
@@ -22,7 +22,7 @@
       </div>
 
       <div class="form-group">
-        <div class="label">订单编号</div>
+        <div class="label">订单编号（选填）</div>
         <el-input v-model="orderNo" placeholder="请输入订单编号" class="custom-input" />
       </div>
 
@@ -35,7 +35,13 @@
         />
       </div>
 
-      <el-button type="primary" class="submit-btn" :loading="submitting" @click="handleSubmit" round
+      <el-button
+        type="primary"
+        class="submit-btn"
+        :loading="submitting"
+        @click="handleSubmit"
+        round
+        ref="submitBtnRef"
         >提交反馈</el-button
       >
     </div>
@@ -54,30 +60,31 @@ const content = ref('')
 const orderNo = ref('')
 const contact = ref('')
 const submitting = ref(false)
+const submitBtnRef = ref()
 
 const handleSubmit = async () => {
-  if (!content.value.trim()) {
-    ElMessage.warning('请填写反馈内容')
-    return
+    if (!content.value.trim()) {
+      ElMessage.warning('请填写反馈内容')
+      return
+    }
+  
+    submitting.value = true
+    try {
+      await submitFeedback({
+        content: content.value,
+        contact: contact.value || undefined,
+      })
+      ElMessage.success('提交成功，感谢您的反馈')
+      setTimeout(() => {
+        router.back()
+      }, 1000)
+    } catch (error) {
+      console.error('提交反馈失败:', error)
+      ElMessage.error('提交失败，请稍后重试')
+    } finally {
+      submitting.value = false
+    }
   }
-
-  submitting.value = true
-  try {
-    await submitFeedback({
-      content: content.value,
-      contact: contact.value || undefined,
-    })
-    ElMessage.success('提交成功，感谢您的反馈')
-    setTimeout(() => {
-      router.back()
-    }, 1000)
-  } catch (error) {
-    console.error('提交反馈失败:', error)
-    ElMessage.error('提交失败，请稍后重试')
-  } finally {
-    submitting.value = false
-  }
-}
 </script>
 
 <style scoped lang="scss">
@@ -139,7 +146,7 @@ const handleSubmit = async () => {
       /* Custom Input Styles */
       :deep(.el-textarea__inner),
       :deep(.el-input__wrapper) {
-        background-color: #f5f7fa; /* Box background gray */
+        background-color: #f7f8fa; /* Box background gray */
         box-shadow: none; /* Remove default border/shadow */
         border-radius: 12px; /* Rounded corners */
         padding: 12px;
@@ -161,6 +168,21 @@ const handleSubmit = async () => {
       margin-top: 30px;
       box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
       border-radius: 24px;
+
+      /* 覆盖 Element Plus 默认的 hover/focus 样式，防止点击后颜色变浅（粘滞效果） */
+      &:hover,
+      &:focus {
+        background-color: var(--el-color-primary);
+        border-color: var(--el-color-primary);
+        color: var(--el-color-white);
+      }
+
+      /* 显式定义点击（按下）时的样式，确保有操作反馈 */
+      &:active {
+        background-color: var(--el-color-primary-dark-2);
+        border-color: var(--el-color-primary-dark-2);
+        color: var(--el-color-white);
+      }
     }
   }
 }

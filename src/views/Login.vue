@@ -170,7 +170,7 @@ const handleBack = () => {
   if (route.query.from === 'logout') {
     router.push('/profile')
   } else if (route.query.from === 'guard') {
-    router.push('/')
+    router.push('/user/profile')
   } else {
     router.back()
   }

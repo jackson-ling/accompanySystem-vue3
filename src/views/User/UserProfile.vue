@@ -11,15 +11,6 @@
               <span class="nickname">{{
                 userStore.isLogin ? userStore.userInfo?.nickname : '点击登录/注册'
               }}</span>
-              <el-tag
-                v-if="userStore.isLogin"
-                size="small"
-                type="warning"
-                effect="dark"
-                round
-                class="level-tag"
-                >VIP会员</el-tag
-              >
             </div>
             <div class="phone" v-if="userStore.isLogin">{{ userStore.userInfo?.phone }}</div>
             <div class="desc" v-else>登录后享受更多权益</div>

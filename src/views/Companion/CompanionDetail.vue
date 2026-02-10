@@ -149,7 +149,10 @@
               <div class="comment-header">
                 <el-avatar :size="30" :src="comment.userAvatar" />
                 <span class="username">{{ comment.username }}</span>
-                <el-rate v-model="comment.score" disabled size="small" />
+                <div class="score-display">
+                  <el-icon color="#F7BA2A"><StarFilled /></el-icon>
+                  <span class="score-text">{{ comment.score.toFixed(1) }}</span>
+                </div>
               </div>
               <div class="comment-content">{{ comment.content }}</div>
               <div class="comment-date">{{ comment.date }}</div>
@@ -300,9 +303,12 @@ const toggleCollection = () => {
 }
 
 // 监听路由变化，重新获取数据
-watch(() => route.params.id, () => {
-  fetchCompanionDetail()
-})
+watch(
+  () => route.params.id,
+  () => {
+    fetchCompanionDetail()
+  },
+)
 
 const goToOrder = (service: any) => {
   if (!userStore.isLogin) {
@@ -722,6 +728,19 @@ const goToServiceDetail = (service: any) => {
         font-size: 14px;
         font-weight: 500;
         flex: 1;
+      }
+
+      .score-display {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+
+        .score-text {
+          font-size: 14px;
+          color: #f7ba2a;
+          font-weight: bold;
+          margin-left: 2px;
+        }
       }
     }
 
