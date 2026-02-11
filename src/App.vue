@@ -5,7 +5,7 @@
         <keep-alive :include="cachedViews">
           <component
             :is="Component"
-            :key="route.fullPath"
+            :key="route.path"
             class="app-page"
             :class="{
               'has-tabbar': route.meta.showTabBar,
@@ -62,14 +62,7 @@ watch(
 const historyPosition = ref(history.state?.position || 0)
 
 // Cache views that need to preserve state (Home, Lists, etc.)
-const alwaysCached = [
-  'HomeView',
-  'ServiceCategory',
-  'CompanionList',
-  'PatientList',
-  'OrderList',
-  'UserProfile',
-]
+const alwaysCached = ['HomeView', 'ServiceCategory', 'CompanionList', 'PatientList', 'UserProfile']
 const cachedViews = ref([...alwaysCached])
 
 // Scroll Position Management

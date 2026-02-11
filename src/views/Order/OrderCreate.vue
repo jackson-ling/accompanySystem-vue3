@@ -161,7 +161,9 @@
         <span class="label">合计:</span>
         <span class="price">¥{{ totalPrice }}</span>
       </div>
-      <el-button type="primary" round class="pay-btn" @click="handlePay"> 立即支付 </el-button>
+      <el-button type="primary" round class="pay-btn" ref="payBtnRef" @click="handlePay">
+        立即支付
+      </el-button>
     </div>
 
     <!-- Service Time Selection Drawer -->
@@ -389,6 +391,7 @@ const selectedTimeSlot = ref('')
 const selectedDateForTime = ref('')
 const availableTimes = ref<{ time: string; status: string }[]>([])
 const timeContentRef = ref<HTMLElement | null>(null)
+const payBtnRef = ref<any>(null)
 
 const generateDates = () => {
   const dates = []
@@ -510,6 +513,11 @@ const selectTime = (slot: { time: string; status: string }) => {
 }
 
 const handlePay = () => {
+  // Remove focus to prevent button from staying in active/focus state (gray)
+  if (payBtnRef.value && payBtnRef.value.$el) {
+    payBtnRef.value.$el.blur()
+  }
+
   if (!selectedService.value) {
     ElMessage.warning('请选择服务项目')
     return
@@ -944,6 +952,18 @@ const handlePay = () => {
     font-size: 16px;
     box-shadow: 0 4px 10px rgba(64, 158, 255, 0.3);
     font-weight: bold;
+    transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+    background: #409eff;
+    border-color: #409eff;
+    color: #fff;
+
+    &:active {
+      transform: scale(0.96);
+      background: #f5f5f5;
+      color: #333;
+      border-color: #f5f5f5;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
   }
 }
 

@@ -38,10 +38,12 @@
           </div>
           <div class="bottom">
             <span class="time">{{ record.time }}</span>
-            <span class="order-id">订单号：{{ record.orderId }}</span>
           </div>
         </div>
-        <div class="amount">+{{ record.amount.toFixed(2) }}</div>
+        <div class="right-column">
+          <span class="view-detail" @click="navigateToOrder(record.orderId)">查看详情 ></span>
+          <div class="amount">+{{ record.amount.toFixed(2) }}</div>
+        </div>
       </div>
       <div v-if="incomeRecords.length === 0" class="empty-state">
         <el-empty description="暂无收入记录" />
@@ -83,6 +85,15 @@ const totalCumulativeIncome = computed(() => {
     .filter((r) => r.status === 'completed')
     .reduce((sum, r) => sum + r.amount, 0)
 })
+
+// 跳转到订单详情
+const navigateToOrder = (orderId: string) => {
+  // 收入明细中的订单通常是已完成的，传入 status=4
+  router.push({
+    path: `/companion/service-order/${orderId}`,
+    query: { status: '4' },
+  })
+}
 
 // 获取收入明细
 async function fetchIncomeRecords() {
@@ -223,9 +234,10 @@ onMounted(() => {
 
       .top {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
         margin-bottom: 8px;
+        gap: 8px;
 
         .type {
           font-size: 15px;
@@ -258,21 +270,31 @@ onMounted(() => {
       .bottom {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         font-size: 12px;
         color: #909399;
-
-        .order-id {
-          color: #c0c4cc;
-        }
       }
     }
 
-    .amount {
-      font-size: 17px;
-      font-weight: 600;
-      color: #f56c6c;
-      font-family: DINAlternate-Bold, sans-serif;
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
       margin-left: 12px;
+      gap: 4px;
+
+      .view-detail {
+        font-size: 12px;
+        color: #409eff;
+        cursor: pointer;
+      }
+
+      .amount {
+        font-size: 17px;
+        font-weight: 600;
+        color: #f56c6c;
+        font-family: DINAlternate-Bold, sans-serif;
+      }
     }
   }
 

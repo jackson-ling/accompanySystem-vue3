@@ -107,35 +107,64 @@
         ></span>
       </div>
 
-      <div class="order-card" v-for="order in pendingOrders" :key="order.id">
-        <div class="card-header">
-          <div class="status" :style="{ color: order.status === 1 ? '#ff9800' : '#67c23a' }">
-            {{ order.status === 1 ? '待接单' : '已接单' }}
+      <template v-if="pendingOrders.length > 0">
+        <div class="order-card" v-for="order in pendingOrders" :key="order.id">
+          <div class="card-body">
+            <div class="info-row">
+              <span class="label">服务项目:</span>
+              <span class="value">{{ order.serviceName }}</span>
+            </div>
+            <div class="info-row time-row">
+              <span class="label">服务时间:</span>
+              <span class="value time-highlight">{{ order.appointmentTime }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">就诊人:</span>
+              <span class="value">{{ order.patientName || '未填写' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">联系电话:</span>
+              <span class="value">{{ order.phone || '未填写' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">服务地点:</span>
+              <span class="value"
+                >{{ order.hospital }} {{ order.department ? `(${order.department})` : '' }}</span
+              >
+            </div>
+          </div>
+          <div class="card-footer">
+            <el-button class="action-btn" plain size="small" @click="contactCustomer"
+              >联系客户</el-button
+            >
+            <el-button
+              class="action-btn"
+              type="danger"
+              plain
+              size="small"
+              @click="handleReject(order)"
+              >拒单</el-button
+            >
+            <el-button
+              class="action-btn primary"
+              type="primary"
+              size="small"
+              @click="handleAccept(order)"
+              >接单</el-button
+            >
           </div>
         </div>
-        <div class="card-body">
-          <div class="info-row">
-            <span class="label">服务项目:</span>
-            <span class="value">{{ order.serviceName }}</span>
-          </div>
-          <div class="info-row time-row">
-            <span class="label">就诊时间:</span>
-            <span class="value time-highlight">{{ order.appointmentTime }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">就诊人:</span>
-            <span class="value">{{ order.patientName || '未填写' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">就诊医院:</span>
-            <span class="value">{{ order.hospital }} {{ order.department ? `(${order.department})` : '' }}</span>
-          </div>
-        </div>
-        <div class="card-footer">
-          <el-button class="action-btn" plain size="small">联系客户</el-button>
-          <el-button class="action-btn" type="danger" plain size="small">拒单</el-button>
-          <el-button class="action-btn primary" type="primary" size="small">接单</el-button>
-        </div>
+      </template>
+
+      <div v-else class="empty-state">
+        <el-empty description="暂无待处理订单" :image-size="120">
+          <template #default>
+            <p class="empty-tips">当前没有需要处理的订单，去抢单大厅看看吧~</p>
+            <el-button type="primary" round @click="router.push('/companion/order-hall')"
+              >去抢单</el-button
+            >
+          </template>
+        </el-empty>
       </div>
     </div>
   </div>
@@ -155,17 +184,16 @@ import {
   Timer,
   CircleCheckFilled,
 } from '@element-plus/icons-vue'
-import {
-  getCompanionStatistics,
-  getCompanionOrders,
-  updateCompanionStatus
-} from '@/api/companion'
+import { getCompanionStatistics, getCompanionOrders, updateCompanionStatus } from '@/api/companion'
 import type { CompanionStatistics, Order } from '@/types/api'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useCompanionOrderStore } from '@/stores/companionOrder'
+import { computed } from 'vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+const companionOrderStore = useCompanionOrderStore()
 
 // 统计数据
 const statistics = ref<CompanionStatistics>({
@@ -178,7 +206,17 @@ const statistics = ref<CompanionStatistics>({
 })
 
 // 待处理订单
-const pendingOrders = ref<Order[]>([])
+const rawPendingOrders = ref<Order[]>([])
+const pendingOrders = computed(() => {
+  return rawPendingOrders.value.filter((order) => {
+    const localStatus = companionOrderStore.getLocalStatus(order.id)
+    // 如果本地状态存在且不是待接单(1)，则不显示
+    if (localStatus && localStatus !== 1) {
+      return false
+    }
+    return true
+  })
+})
 const isOnline = ref(true)
 
 // 获取统计数据
@@ -194,10 +232,52 @@ async function fetchStatistics() {
 async function fetchPendingOrders() {
   try {
     const res = await getCompanionOrders({ status: 1, page: 1, size: 5 })
-    pendingOrders.value = res.list || []
+    rawPendingOrders.value = res.list || []
   } catch (error) {
     console.error('获取订单列表失败:', error)
   }
+}
+
+// 联系客户
+const contactCustomer = () => {
+  router.push('/messages')
+}
+
+// 拒单处理
+const handleReject = (order: Order) => {
+  ElMessageBox.confirm('确认拒绝该订单吗？拒单可能会影响您的接单率', '拒单确认', {
+    confirmButtonText: '确认拒单',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      ElMessage.info('已拒绝该订单')
+      // 从列表中移除
+      const index = rawPendingOrders.value.findIndex((o) => o.id === order.id)
+      if (index > -1) {
+        rawPendingOrders.value.splice(index, 1)
+      }
+    })
+    .catch(() => {
+      // 取消
+    })
+}
+
+// 接单处理
+const handleAccept = (order: Order) => {
+  ElMessageBox.confirm('确认接下该订单吗？接单后请准时提供服务', '接单确认', {
+    confirmButtonText: '确认接单',
+    cancelButtonText: '取消',
+    type: 'success',
+  })
+    .then(() => {
+      ElMessage.success('接单成功')
+      // 更新本地状态为待服务(2)
+      companionOrderStore.updateLocalStatus(order.id, 2)
+    })
+    .catch(() => {
+      // 取消
+    })
 }
 
 // 切换在线状态
@@ -478,20 +558,7 @@ onMounted(() => {
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .status {
-      font-size: 14px;
-      font-weight: 500;
-    }
-  }
-
   .card-body {
-    padding-top: 12px;
-
     .info-row {
       display: flex;
       margin-bottom: 10px;
@@ -535,6 +602,27 @@ onMounted(() => {
       font-size: 13px;
       font-weight: 500;
     }
+  }
+}
+
+.empty-state {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+
+  :deep(.el-empty__description) {
+    margin-top: 10px;
+    p {
+      font-size: 15px;
+      color: #909399;
+    }
+  }
+
+  .empty-tips {
+    font-size: 13px;
+    color: #909399;
+    margin-bottom: 16px;
   }
 }
 </style>

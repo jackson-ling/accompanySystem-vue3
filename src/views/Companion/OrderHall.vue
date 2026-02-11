@@ -12,21 +12,32 @@
 
     <div class="order-list">
       <div class="order-card" v-for="order in availableOrders" :key="order.id">
-        <div class="card-header">
-          <div class="service-tag">{{ order.serviceName }}</div>
-          <div class="price">¥{{ order.amount }}</div>
-        </div>
-        <div class="info-row">
-          <el-icon><Location /></el-icon>
-          <span>{{ order.hospital }}{{ order.department ? ` (${order.department})` : '' }}</span>
-        </div>
-        <div class="info-row">
-          <el-icon><Clock /></el-icon>
-          <span>{{ order.appointmentTime }}</span>
+        <div class="card-main">
+          <div class="left-info">
+            <div class="service-tag">{{ order.serviceName }}</div>
+            <div class="info-row">
+              <el-icon><User /></el-icon>
+              <span>{{ order.patientName || '就诊人' }}</span>
+            </div>
+            <div class="info-row">
+              <el-icon><Location /></el-icon>
+              <span
+                >{{ order.hospital }}{{ order.department ? ` (${order.department})` : '' }}</span
+              >
+            </div>
+            <div class="info-row">
+              <el-icon><Clock /></el-icon>
+              <span>{{ order.appointmentTime }}</span>
+            </div>
+          </div>
+          <div class="right-price">
+            <div class="price">¥{{ order.amount }}</div>
+          </div>
         </div>
         <div class="card-footer">
-          <div class="distance">{{ order.distance || '距离未知' }}</div>
-          <el-button type="primary" size="small" round>立即抢单</el-button>
+          <el-button type="primary" size="small" round @click="handleGrab(order)"
+            >立即抢单</el-button
+          >
         </div>
       </div>
       <div v-if="availableOrders.length === 0 && !loading" class="empty-state">
@@ -39,7 +50,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Location, Clock } from '@element-plus/icons-vue'
+import { ArrowLeft, Location, Clock, User } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 import { getAvailableOrders } from '@/api/companion'
 import type { AvailableOrder } from '@/types/api'
 
@@ -48,6 +60,16 @@ const router = useRouter()
 // 可接订单列表
 const availableOrders = ref<AvailableOrder[]>([])
 const loading = ref(false)
+
+// 抢单处理
+const handleGrab = (order: AvailableOrder) => {
+  ElMessageBox.alert('抢单成功', '提示', {
+    confirmButtonText: '确定',
+    callback: () => {
+      fetchAvailableOrders()
+    },
+  })
+}
 
 // 获取可接订单
 async function fetchAvailableOrders() {
@@ -124,18 +146,23 @@ onMounted(() => {
   padding: 16px;
   margin-bottom: 12px;
 
-  .card-header {
+  .card-main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .left-info {
+    flex: 1;
 
     .service-tag {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       color: #333;
       position: relative;
       padding-left: 10px;
+      margin-bottom: 12px;
 
       &::before {
         content: '';
@@ -144,40 +171,51 @@ onMounted(() => {
         top: 50%;
         transform: translateY(-50%);
         width: 3px;
-        height: 14px;
+        height: 16px;
         background: #409eff;
         border-radius: 2px;
       }
     }
 
-    .price {
-      font-size: 16px;
-      font-weight: 600;
-      color: #f56c6c;
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
   }
 
-  .info-row {
+  .right-price {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 8px;
+    justify-content: flex-end;
+    padding-left: 16px;
+
+    .price {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f56c6c;
+      font-family:
+        DINAlternate-Bold,
+        -apple-system,
+        Helvetica Neue,
+        sans-serif;
+    }
   }
 
   .card-footer {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid #f5f7fa;
-
-    .distance {
-      font-size: 12px;
-      color: #999;
-    }
   }
 }
 

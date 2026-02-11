@@ -103,6 +103,7 @@ export interface Order {
   image?: string
   companionId?: number
   companionName?: string
+  companionPhone?: string
   companionAvatar?: string
   patientName?: string
   hospital: string
@@ -118,6 +119,11 @@ export interface Order {
   payTime?: string
   time?: string
   phone?: string
+  clientComment?: {
+    score: number
+    content: string
+    time?: string
+  }
 }
 
 export interface AvailableOrder {
@@ -130,6 +136,7 @@ export interface AvailableOrder {
   amount: number
   distance?: string
   publishTime?: string
+  patientName?: string
 }
 
 export interface CreateOrderPayload {

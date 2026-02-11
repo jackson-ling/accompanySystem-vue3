@@ -11,7 +11,16 @@ export function getServices(params?: ServiceListParams) {
   return request.get<any, ServiceItem[]>('/services', { params })
 }
 
-export function getServiceDetail(id: number) {
+export async function getServiceDetail(id: number) {
+  try {
+    const list = await getServices()
+    const found = list.find((item) => item.id === id)
+    if (found) {
+      return found
+    }
+  } catch (error) {
+    console.error('Failed to get services list for detail:', error)
+  }
   return request.get<any, ServiceItem>(`/services/${id}`)
 }
 

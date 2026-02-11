@@ -64,7 +64,7 @@
     </div>
 
     <!-- Bottom Bar -->
-    <div class="detail-bottom-bar">
+    <div class="detail-bottom-bar" v-if="!isFromOrderDetail">
       <el-button
         type="primary"
         class="action-btn"
@@ -90,7 +90,7 @@ defineOptions({
 })
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft, Clock } from '@element-plus/icons-vue'
+
 import CompanionSelector from '@/components/appointment/CompanionSelector.vue'
 import { useOrderStore } from '@/stores/order'
 import { useUserStore } from '@/stores/user'
@@ -148,6 +148,7 @@ onMounted(() => {
 
 const hasCompanion = ref(!!route.query.companionId)
 const isFromOrderCreate = ref(route.query.from === 'order-create')
+const isFromOrderDetail = ref(route.query.from === 'order-detail')
 
 watch(
   () => route.query,
@@ -156,6 +157,7 @@ watch(
     if (route.name === 'service') {
       hasCompanion.value = !!newQuery.companionId
       isFromOrderCreate.value = newQuery.from === 'order-create'
+      isFromOrderDetail.value = newQuery.from === 'order-detail'
     }
   },
 )
@@ -267,21 +269,23 @@ const handleCompanionSelect = (companion: any) => {
 
   .left-section {
     display: flex;
-    align-items: center;
+    flex-direction: row;
+    align-items: baseline;
     flex: 1;
     margin-right: 15px;
 
     .title {
-      font-size: 20px;
+      font-size: 23px;
       font-weight: bold;
       color: #333;
-      margin-right: 8px;
+      margin-right: 12px;
+      margin-bottom: 0;
       line-height: 1.4;
     }
 
     .price {
       color: #f56c6c;
-      font-size: 25px;
+      font-size: 24px;
       font-weight: bold;
       line-height: 1;
     }
@@ -394,6 +398,20 @@ const handleCompanionSelect = (companion: any) => {
     border-radius: 22px;
     border: none;
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+
+    // 强制覆盖 Element Plus 默认的点击变色行为
+    --el-button-active-bg-color: #409eff;
+    --el-button-active-border-color: #409eff;
+    --el-button-hover-bg-color: #409eff;
+    --el-button-hover-border-color: #409eff;
+
+    &:active,
+    &:focus,
+    &:hover {
+      background-color: #409eff !important;
+      border-color: #409eff !important;
+      opacity: 1 !important;
+    }
   }
 }
 </style>

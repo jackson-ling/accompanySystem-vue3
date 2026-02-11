@@ -33,6 +33,10 @@ export function refundUserOrder(id: string | number, data: { reason: string }) {
   return request.post<any, void>(`/user/orders/${id}/refund`, data)
 }
 
+export function evaluateOrder(id: string | number, data: { score: number; content: string }) {
+  return request.post<any, void>(`/user/orders/${id}/comment`, data)
+}
+
 export interface AvailableOrderParams {
   serviceId?: number
 }

@@ -33,6 +33,7 @@ const IncomeDetails = () => import('@/views/Companion/IncomeDetails.vue')
 const ServiceOrders = () => import('@/views/Companion/ServiceOrders.vue')
 const ServiceOrderDetail = () => import('@/views/Companion/ServiceOrderDetail.vue')
 const OrderList = () => import('@/views/Order/OrderList.vue')
+const OrderDetail = () => import('@/views/Order/OrderDetail.vue')
 const Recharge = () => import('@/views/User/Recharge.vue')
 const RechargeRecord = () => import('@/views/User/RechargeRecord.vue')
 const ConsumptionRecord = () => import('@/views/User/ConsumptionRecord.vue')
@@ -69,6 +70,7 @@ const routes: RouteRecordRaw[] = [
     path: '/service/:id',
     name: 'service',
     component: ServiceDetail,
+    meta: { showTabBar: false },
   },
   {
     path: '/companion',
@@ -206,6 +208,12 @@ const routes: RouteRecordRaw[] = [
     path: '/order/list',
     name: 'order-list',
     component: OrderList,
+    meta: { showTabBar: false, requiresAuth: true },
+  },
+  {
+    path: '/order/detail/:id',
+    name: 'order-detail',
+    component: OrderDetail,
     meta: { showTabBar: false, requiresAuth: true },
   },
   {
