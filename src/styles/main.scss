@@ -1,0 +1,249 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f7f8fa;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent; /* Remove default blue highlight */
+  -webkit-touch-callout: none; /* Prevent callout menu */
+  user-select: none; /* Prevent text selection */
+  overscroll-behavior: none; /* Disable elastic scrolling */
+}
+
+/* Global tap highlight removal for all elements */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Allow text selection on inputs and textareas */
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Global overrides to remove animations */
+.el-button,
+.el-button:hover,
+.el-button:active,
+.el-button:focus,
+.u-button,
+.u-button--active,
+button {
+  transition: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Remove ripple effects */
+.el-ripple {
+  display: none !important;
+}
+
+/* Global width constraint for mobile simulation */
+#app {
+  max-width: 750px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: #fff;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure drawers and dialogs match the mobile width */
+.el-overlay {
+  max-width: 750px;
+  width: 100% !important; /* Ensure full width relative to viewport */
+  left: 50% !important; /* Center horizontally */
+  right: auto !important; /* Override default right: 0 */
+  transform: translateX(-50%) !important; /* Perfect centering */
+  height: 100% !important;
+  position: fixed !important; /* Force fixed to stay in viewport */
+  z-index: 2000 !important; /* Ensure high priority */
+}
+
+.el-drawer {
+  max-width: 100%; /* Relative to the constrained overlay */
+  width: 100% !important;
+  margin: 0 auto;
+}
+
+/* Mobile-style bottom drawer rounded corners */
+.el-drawer.btt {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  overflow: hidden; /* Clip content to radius */
+}
+
+.el-drawer__header {
+  margin-bottom: 0 !important;
+  padding: 15px !important;
+  font-weight: bold;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.el-drawer__body {
+  padding: 0 !important; /* Reset padding for custom layout */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ensure it fills the drawer */
+}
+
+/* Scrollbar hiding for clean mobile look */
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* Helper classes */
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Task 1: Floating Back Button Global Style */
+.floating-back-btn-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  pointer-events: none; /* Transparent to clicks */
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  /* Prohibit white border/background */
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.floating-back-btn {
+  pointer-events: auto; /* Enable clicks */
+  background-color: #409eff;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  height: 40px;
+  padding: 0 40px;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+  font-weight: 500;
+  margin: 0 auto;
+}
+
+/* Task 5: Mobile Scroll & Safe Area */
+.mobile-scroll-wrapper {
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+
+/* Task 3 & 4: Bottom Action Bar (Safe Area & TabBar Awareness) */
+.bottom-action-bar {
+  position: fixed;
+  bottom: calc(50px + env(safe-area-inset-bottom) + 20px); /* Lift above TabBar (50px) + padding */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 750px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 1000;
+
+  .action-btn {
+    pointer-events: auto;
+    width: 100%;
+    height: 48px;
+    background-color: #409eff;
+    border-radius: 6px; /* Task 3: 6px radius */
+    font-size: 16px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    border: none;
+    color: #fff;
+
+    &:active {
+      opacity: 0.9;
+    }
+  }
+}
+
+/* Image Viewer Customization for Mobile */
+.el-image-viewer__wrapper {
+  .el-image-viewer__mask {
+    background: rgba(0, 0, 0, 0.9); /* Darker background */
+  }
+
+  .el-image-viewer__canvas {
+    .el-image-viewer__img {
+      max-width: min(85vw, 600px) !important; /* Shrink image size further as requested */
+      max-height: 70vh !important; /* Limit height to prevent covering too much */
+      width: auto !important;
+      height: auto !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5); /* Add shadow for better visibility */
+    }
+  }
+
+  .el-image-viewer__actions {
+    background-color: rgba(0, 0, 0, 0.7) !important; /* Dark background for better contrast */
+    border-radius: 30px;
+    padding: 10px 20px;
+    bottom: 50px; /* Adjusted for mobile safety */
+    width: max-content;
+    left: 50%;
+    transform: translateX(-50%);
+
+    .el-image-viewer__actions__inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px; /* Reduced spacing for mobile */
+
+      /* Hide dividers */
+      .el-image-viewer__actions__divider {
+        display: none !important;
+      }
+
+      /* Hide the middle button (Full Screen / Scale) 
+         Structure: [Icon] [Icon] [Divider] [Icon-Target] [Divider] [Icon] [Icon]
+         Target is the 4th child.
+      */
+      > *:nth-child(4) {
+        display: none !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .el-icon {
+        font-size: 24px;
+        color: #fff;
+        cursor: pointer;
+        margin: 0;
+      }
+    }
+  }
+
+  /* Close button style */
+  .el-image-viewer__btn.el-image-viewer__close {
+    top: 40px;
+    right: 20px;
+    font-size: 30px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+  }
+}
