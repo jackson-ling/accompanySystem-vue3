@@ -109,84 +109,14 @@ async function fetchAvailableOrders() {
     }
 
     console.log('[OrderHall] 订单列表:', availableOrders.value)
-
-    // 如果仍然没有数据，使用 Mock 数据
-    if (availableOrders.value.length === 0) {
-      console.warn('[OrderHall] 接口未返回数据，使用 Mock 数据')
-      availableOrders.value = mockOrders
-    }
   } catch (error) {
     console.error('获取可接订单失败:', error)
-    // 使用 Mock 数据作为兜底
-    availableOrders.value = mockOrders
+    // API失败时显示空列表
+    availableOrders.value = []
   } finally {
     loading.value = false
   }
 }
-
-// Mock 数据（临时方案）
-const mockOrders: AvailableOrder[] = [
-  {
-    id: 'ORD20240315001',
-    serviceName: '门诊陪诊',
-    hospital: '北京协和医院',
-    department: '心内科',
-    appointmentTime: '2024-03-16 09:00',
-    pickupOption: '需要接送',
-    amount: 298.00,
-    distance: '2.5km',
-    publishTime: '2024-03-15 14:30',
-    patientName: '李女士'
-  },
-  {
-    id: 'ORD20240315002',
-    serviceName: '全天陪诊',
-    hospital: '北京同仁医院',
-    department: '眼科',
-    appointmentTime: '2024-03-16 14:00',
-    pickupOption: '不需要接送',
-    amount: 598.00,
-    distance: '1.2km',
-    publishTime: '2024-03-15 15:00',
-    patientName: '王先生'
-  },
-  {
-    id: 'ORD20240315003',
-    serviceName: '异地陪诊',
-    hospital: '北京天坛医院',
-    department: '神经外科',
-    appointmentTime: '2024-03-17 10:00',
-    pickupOption: '需要接送',
-    amount: 898.00,
-    distance: '5.8km',
-    publishTime: '2024-03-15 16:00',
-    patientName: '张女士'
-  },
-  {
-    id: 'ORD20240315004',
-    serviceName: '门诊陪诊',
-    hospital: '北京朝阳医院',
-    department: '呼吸内科',
-    appointmentTime: '2024-03-17 15:30',
-    pickupOption: '不需要接送',
-    amount: 298.00,
-    distance: '3.2km',
-    publishTime: '2024-03-15 17:00',
-    patientName: '赵先生'
-  },
-  {
-    id: 'ORD20240315005',
-    serviceName: '全天陪诊',
-    hospital: '北京安贞医院',
-    department: '心血管内科',
-    appointmentTime: '2024-03-18 08:30',
-    pickupOption: '需要接送',
-    amount: 598.00,
-    distance: '4.5km',
-    publishTime: '2024-03-15 18:00',
-    patientName: '刘女士'
-  }
-]
 
 // 组件挂载时获取数据
 onMounted(() => {

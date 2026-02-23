@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import type { Patient, UserProfile } from '@/types/api'
 import { login as loginApi, logout as logoutApi } from '@/api/auth'
 import { getUserProfile, getUserBalance } from '@/api/user'
-import { getPatients } from '@/api/patient'
+import { getPatients, createPatient, updatePatient as updatePatientApi, deletePatient as deletePatientApi } from '@/api/patient'
 
 // 重新导出类型以保持向后兼容
 export type { Patient }
@@ -18,34 +18,36 @@ export const useUserStore = defineStore('user', () => {
   const patients = ref<Patient[]>([])
   const selectedPatientId = ref<number | null>(null)
 
-  const addPatient = (patient: Omit<Patient, 'id'>) => {
-    if (patient.default) {
-      patients.value = patients.value.map((p) => ({ ...p, default: false }))
-    }
-    const newId = patients.value.length > 0 ? Math.max(...patients.value.map((p) => p.id)) + 1 : 1
-    patients.value.push({
-      ...patient,
-      id: newId,
-    })
-  }
-
-  const updatePatient = (patient: Patient) => {
-    if (patient.default) {
-      patients.value = patients.value.map((p) => ({ ...p, default: false }))
-    }
-    const index = patients.value.findIndex((p) => p.id === patient.id)
-    if (index !== -1) {
-      patients.value[index] = patient
+  const addPatient = async (patient: Omit<Patient, 'id'>) => {
+    try {
+      await createPatient(patient)
+      await fetchPatients()
+    } catch (error) {
+      console.error('Failed to add patient:', error)
+      throw error
     }
   }
 
-  const deletePatient = (id: number) => {
-    const index = patients.value.findIndex((p) => p.id === id)
-    if (index !== -1) {
-      patients.value.splice(index, 1)
+  const updatePatient = async (patient: Patient) => {
+    try {
+      await updatePatientApi(patient.id, patient)
+      await fetchPatients()
+    } catch (error) {
+      console.error('Failed to update patient:', error)
+      throw error
+    }
+  }
+
+  const deletePatient = async (id: number) => {
+    try {
+      await deletePatientApi(id)
+      await fetchPatients()
       if (selectedPatientId.value === id) {
         selectedPatientId.value = null
       }
+    } catch (error) {
+      console.error('Failed to delete patient:', error)
+      throw error
     }
   }
 

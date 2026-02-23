@@ -197,7 +197,7 @@ const handleDeleteAccount = () => {
       setTimeout(() => {
         userStore.logout()
         ElMessage.success('账号已注销')
-        router.push('/profile')
+        router.push('/login')
       }, 1000)
     })
     .catch(() => {})

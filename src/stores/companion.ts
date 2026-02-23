@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Companion as ApiCompanion } from '@/types/api'
+import type { Companion as ApiCompanion, FavoriteItem } from '@/types/api'
 import { getCompanions } from '@/api/companion'
 import { getFavorites, addFavorite, deleteFavorite } from '@/api/favorite'
 import type { CompanionListParams } from '@/api/companion'
@@ -40,16 +40,13 @@ export const useCompanionStore = defineStore('companion', () => {
 
   // Favorites
   const favorites = ref<number[]>(JSON.parse(localStorage.getItem('collected_companions') || '[]'))
-  const favoritesList = ref<{ id: number; itemId: number }[]>([])
+  const favoritesList = ref<FavoriteItem[]>([])
 
   // 获取收藏列表
   async function fetchFavorites() {
     try {
       const res = await getFavorites({ type: 'companion' })
-      favoritesList.value = res.map((item: any) => ({
-        id: item.id,
-        itemId: item.itemId
-      }))
+      favoritesList.value = res
       // 更新 favorites 数组
       favorites.value = favoritesList.value.map(f => f.itemId)
     } catch (error) {
@@ -77,12 +74,32 @@ export const useCompanionStore = defineStore('companion', () => {
         const favItem = favoritesList.value.find(f => f.itemId === id)
         if (favItem) {
           await deleteFavorite(favItem.id)
+          // 只有 API 成功才更新本地状态
+          favorites.value.splice(index, 1)
+          // 同步更新 favoritesList
+          const listIndex = favoritesList.value.findIndex(f => f.itemId === id)
+          if (listIndex > -1) favoritesList.value.splice(listIndex, 1)
+        } else {
+          // 如果本地找不到映射 ID，尝试重新获取列表或忽略（避免报错）
+          console.warn('找不到收藏记录ID，尝试重新同步')
+          await fetchFavorites()
+          // 重试一次删除
+          const retryItem = favoritesList.value.find(f => f.itemId === id)
+          if (retryItem) {
+            await deleteFavorite(retryItem.id)
+            const newIndex = favorites.value.indexOf(id)
+            if (newIndex > -1) favorites.value.splice(newIndex, 1)
+          }
         }
-        favorites.value.splice(index, 1)
       } else {
         // 添加收藏 - 调用添加API
         await addFavorite({ type: 'companion', itemId: id })
-        favorites.value.push(id)
+        // 添加成功后，重新获取列表以获得新的 favoriteId
+        await fetchFavorites()
+        // 确保 favorites 数组包含该 ID (fetchFavorites 会更新它，但为了UI即时响应，可以先 push)
+        if (!favorites.value.includes(id)) {
+          favorites.value.push(id)
+        }
       }
       localStorage.setItem('collected_companions', JSON.stringify(favorites.value))
     } catch (error) {

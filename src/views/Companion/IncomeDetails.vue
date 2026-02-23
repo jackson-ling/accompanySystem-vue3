@@ -88,10 +88,16 @@ const totalCumulativeIncome = computed(() => {
 
 // 跳转到订单详情
 const navigateToOrder = (orderId: string) => {
+  if (!orderId) {
+    console.error('订单ID为空')
+    return
+  }
   // 收入明细中的订单通常是已完成的，传入 status=4
+  // 添加唯一标识 _uid 避免状态冲突
+  const uniqueId = `income_${orderId}_${Date.now()}`
   router.push({
     path: `/companion/service-order/${orderId}`,
-    query: { status: '4' },
+    query: { status: '4', _uid: uniqueId },
   })
 }
 

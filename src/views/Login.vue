@@ -154,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { Iphone, Lock, FirstAidKit, ArrowLeft } from '@element-plus/icons-vue'
@@ -308,10 +308,6 @@ const handleReset = async () => {
   }
 }
 
-// 组件挂载时初始化用户状态
-onMounted(() => {
-  userStore.init()
-})
 </script>
 
 <style scoped lang="scss">

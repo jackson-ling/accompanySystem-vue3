@@ -185,24 +185,32 @@ const fetchOrders = async () => {
   loading.value = true
   try {
     const res = await getCompanionOrders()
+    console.log('[ServiceOrders] API返回:', res)
     // The API returns PaginatedResult<Order>, but TS might be confused by the assignment
     // We explicitly access the list property if available
-    if ('list' in res && Array.isArray(res.list)) {
-      orders.value = res.list.map((item, index) => ({
-        ...item,
-        _uniqueId: `${item.id}_${index}`,
-      })) as OrderWithUniqueId[]
-    } else if (Array.isArray(res)) {
-      // Fallback if it returns an array
-      orders.value = (res as Order[]).map((item, index) => ({
-        ...item,
-        _uniqueId: `${item.id}_${index}`,
-      })) as OrderWithUniqueId[]
+    if (res && typeof res === 'object') {
+      if ('list' in res && Array.isArray(res.list)) {
+        orders.value = res.list.map((item, index) => ({
+          ...item,
+          _uniqueId: `${item.id}_${index}`,
+        })) as OrderWithUniqueId[]
+      } else if (Array.isArray(res)) {
+        // Fallback if it returns an array
+        orders.value = (res as Order[]).map((item, index) => ({
+          ...item,
+          _uniqueId: `${item.id}_${index}`,
+        })) as OrderWithUniqueId[]
+      } else {
+        orders.value = []
+      }
     } else {
       orders.value = []
     }
+    console.log('[ServiceOrders] 订单列表:', orders.value)
   } catch (error) {
     console.error('获取订单失败:', error)
+    ElMessage.error('获取订单失败，请稍后重试')
+    orders.value = []
   } finally {
     loading.value = false
   }

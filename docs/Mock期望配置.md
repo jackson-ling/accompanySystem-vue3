@@ -5,11 +5,11 @@
 | 模块 | 接口数量 |
 |------|----------|
 | 认证模块 | 4 |
-| 用户模块 | 4 |
+| 用户模块 | 5 |
 | 就诊人模块 | 5 |
-| 服务模块 | 4 |
-| 陪诊师模块 | 10 |
-| 订单模块 | 8 |
+| 服务模块 | 3 |
+| 陪诊师模块 | 13 |
+| 订单模块 | 13 |
 | 收藏模块 | 3 |
 | 消息模块 | 4 |
 | 聊天模块 | 3 |
@@ -19,13 +19,14 @@
 | 字典模块 | 3 |
 | 反馈模块 | 2 |
 | AI 模块 | 1 |
-| **总计** | **57** |
+| **总计** | **65** |
 
 ---
 
 ## 1️⃣ 认证模块 `/auth`
 
 ### POST /auth/register - 用户注册
+**参数**: `{ phone, password, verifyCode, nickname }`
 ```json
 {
   "code": 200,
@@ -44,6 +45,7 @@
 ```
 
 ### POST /auth/login - 用户登录
+**参数**: `{ phone, password }`
 ```json
 {
   "code": 200,
@@ -71,6 +73,7 @@
 ```
 
 ### POST /auth/reset-password - 重置密码
+**参数**: `{ phone, verifyCode, newPassword }`
 ```json
 {
   "code": 200,
@@ -99,21 +102,27 @@
 ```
 
 ### PUT /user/profile - 更新用户信息
+**参数**: `{ nickname?, avatar?, phone?, ... }`
 ```json
 {
   "code": 200,
   "msg": "更新成功",
-  "data": {
-    "id": 1,
-    "nickname": "李四",
-    "avatar": "https://example.com/new-avatar.jpg",
-    "phone": "13800138000",
-    "balance": 1000.50
-  }
+  "data": null
+}
+```
+
+### PUT /user/avatar - 更新用户头像
+**参数**: `{ avatar: string }`
+```json
+{
+  "code": 200,
+  "msg": "头像更新成功",
+  "data": null
 }
 ```
 
 ### PUT /user/password - 修改密码
+**参数**: `{ oldPassword, newPassword }`
 ```json
 {
   "code": 200,
@@ -162,34 +171,22 @@
 ```
 
 ### POST /user/patients - 添加就诊人
+**参数**: `{ name, phone, address, relationship, default? }`
 ```json
 {
   "code": 200,
   "msg": "添加成功",
-  "data": {
-    "id": 3,
-    "name": "赵女士",
-    "phone": "13700137000",
-    "address": "北京市西城区",
-    "relationship": "本人",
-    "default": false
-  }
+  "data": null
 }
 ```
 
 ### PUT /user/patients/{id} - 更新就诊人
+**参数**: `{ name?, phone?, address?, ... }`
 ```json
 {
   "code": 200,
   "msg": "更新成功",
-  "data": {
-    "id": 1,
-    "name": "李女士",
-    "phone": "13900139999",
-    "address": "北京市朝阳区新地址",
-    "relationship": "母亲",
-    "default": true
-  }
+  "data": null
 }
 ```
 
@@ -216,6 +213,7 @@
 ## 4️⃣ 服务模块 `/services`
 
 ### GET /services - 获取服务列表
+**参数**: `{ type?, sort?, keyword? }`
 ```json
 {
   "code": 200,
@@ -240,6 +238,46 @@
       "sales": 892,
       "image": "https://example.com/service2.jpg",
       "duration": "8小时"
+    },
+    {
+      "id": 3,
+      "name": "代办问诊",
+      "description": "专业团队代办问诊，省时省力",
+      "price": 158,
+      "type": "agency",
+      "sales": 654,
+      "image": "https://example.com/service3.jpg",
+      "duration": "一次"
+    },
+    {
+      "id": 4,
+      "name": "尊享VIP陪诊",
+      "description": "资深陪诊师一对一服务，专车接送",
+      "price": 888,
+      "type": "companion",
+      "sales": 120,
+      "image": "https://example.com/service4.jpg",
+      "duration": "8小时"
+    },
+    {
+      "id": 5,
+      "name": "孕妇专属陪诊",
+      "description": "女性陪诊师贴心服务，产检无忧",
+      "price": 358,
+      "type": "companion",
+      "sales": 432,
+      "image": "https://example.com/service5.jpg",
+      "duration": "4小时"
+    },
+    {
+      "id": 6,
+      "name": "儿童陪诊",
+      "description": "耐心细致，熟悉儿科就诊流程",
+      "price": 328,
+      "type": "companion",
+      "sales": 289,
+      "image": "https://example.com/service6.jpg",
+      "duration": "4小时"
     }
   ]
 }
@@ -282,6 +320,7 @@
 ## 5️⃣ 陪诊师模块 `/companions`
 
 ### GET /companions - 获取陪诊师列表
+**参数**: `{ page, size, gender?, service?, sort?, keyword? }`
 ```json
 {
   "code": 200,
@@ -304,6 +343,70 @@
         "tags": ["耐心", "专业"],
         "intro": "从事陪诊行业3年，服务周到",
         "collected": true
+      },
+      {
+        "id": 102,
+        "name": "李强",
+        "avatar": "https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png",
+        "gender": "male",
+        "age": 28,
+        "score": 4.9,
+        "orders": 512,
+        "comments": 420,
+        "certified": true,
+        "qualified": true,
+        "experience": "4年",
+        "tags": ["力气大", "跑腿快"],
+        "intro": "退伍军人，身体素质好，熟悉各大医院流程",
+        "collected": false
+      },
+      {
+        "id": 103,
+        "name": "王芳",
+        "avatar": "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+        "gender": "female",
+        "age": 45,
+        "score": 5.0,
+        "orders": 890,
+        "comments": 800,
+        "certified": true,
+        "qualified": true,
+        "experience": "10年",
+        "tags": ["护士背景", "亲和力"],
+        "intro": "前三甲医院护士，具备专业护理知识，擅长老年人陪诊",
+        "collected": true
+      },
+      {
+        "id": 104,
+        "name": "张伟",
+        "avatar": "https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png",
+        "gender": "male",
+        "age": 30,
+        "score": 4.7,
+        "orders": 150,
+        "comments": 120,
+        "certified": true,
+        "qualified": true,
+        "experience": "2年",
+        "tags": ["细心", "负责"],
+        "intro": "工作认真负责，熟悉挂号缴费流程",
+        "collected": false
+      },
+      {
+        "id": 105,
+        "name": "陈静",
+        "avatar": "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+        "gender": "female",
+        "age": 25,
+        "score": 4.8,
+        "orders": 80,
+        "comments": 60,
+        "certified": true,
+        "qualified": true,
+        "experience": "1年",
+        "tags": ["温柔", "耐心"],
+        "intro": "性格开朗，善于沟通，陪伴就诊不孤单",
+        "collected": false
       }
     ],
     "page": 1,
@@ -337,6 +440,7 @@
 ```
 
 ### GET /companions/{id}/comments - 获取陪诊师评价
+**参数**: `{ page, size }`
 ```json
 {
   "code": 200,
@@ -398,16 +502,29 @@
   "data": {
     "id": 101,
     "name": "武海艳",
+    "nickname": "武海艳",
     "avatar": "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
     "age": 32,
     "gender": "female",
     "experience": "3年",
-    "phone": "13800138888"
+    "phone": "13800138888",
+    "intro": "从事陪诊行业3年，服务周到"
   }
 }
 ```
 
+### PUT /companion/profile - 更新个人信息
+**参数**: `{ nickname?, avatar?, ... }`
+```json
+{
+  "code": 200,
+  "msg": "更新成功",
+  "data": null
+}
+```
+
 ### GET /companion/available-orders - 获取可接订单
+**参数**: `{ page, size }`
 ```json
 {
   "code": 200,
@@ -440,12 +557,15 @@
   "msg": "接单成功",
   "data": {
     "id": "ORD20240315001",
-    "status": 2
+    "status": 2,
+    "serviceName": "门诊陪诊",
+    "amount": 298.00
   }
 }
 ```
 
 ### PUT /companion/orders/{orderId}/reject - 拒单
+**参数**: `{ reason? }`
 ```json
 {
   "code": 200,
@@ -454,7 +574,37 @@
 }
 ```
 
+### PUT /companion/orders/{id}/status - 更新订单状态
+**参数**: `{ status }`
+```json
+{
+  "code": 200,
+  "msg": "状态更新成功",
+  "data": null
+}
+```
+
+### PUT /companion/orders/{id}/start - 开始服务
+```json
+{
+  "code": 200,
+  "msg": "服务已开始",
+  "data": null
+}
+```
+
+### PUT /companion/orders/{id}/complete - 完成服务
+**参数**: `{ serviceContent, images }`
+```json
+{
+  "code": 200,
+  "msg": "服务已完成",
+  "data": null
+}
+```
+
 ### GET /companion/orders - 获取订单列表
+**参数**: `{ page, size, status? }`
 ```json
 {
   "code": 200,
@@ -464,13 +614,19 @@
     "list": [
       {
         "id": "ORD20240315001",
+        "serviceId": 1,
         "serviceName": "门诊陪诊",
-        "companionName": "武海艳",
         "patientName": "李女士",
+        "patientPhone": "13900139000",
         "hospital": "北京协和医院",
+        "department": "心内科",
         "appointmentTime": "2024-03-16 09:00",
+        "address": "北京市朝阳区",
+        "pickupOption": "需要接送",
+        "remark": "请按时到达",
+        "amount": 298.00,
         "status": 2,
-        "amount": 298.00
+        "createTime": "2024-03-15 14:30"
       }
     ],
     "page": 1,
@@ -479,7 +635,32 @@
 }
 ```
 
+### GET /companion/orders/{id} - 获取订单详情
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": {
+    "id": "ORD20240315001",
+    "serviceId": 1,
+    "serviceName": "门诊陪诊",
+    "patientName": "李女士",
+    "patientPhone": "13900139000",
+    "hospital": "北京协和医院",
+    "department": "心内科",
+    "appointmentTime": "2024-03-16 09:00",
+    "address": "北京市朝阳区",
+    "pickupOption": "需要接送",
+    "remark": "请按时到达",
+    "amount": 298.00,
+    "status": 2,
+    "createTime": "2024-03-15 14:30"
+  }
+}
+```
+
 ### GET /companion/income - 获取收入明细
+**参数**: `{ page, size }`
 ```json
 {
   "code": 200,
@@ -503,6 +684,7 @@
 ```
 
 ### POST /companion/status - 更新在线状态
+**参数**: `{ isOnline }`
 ```json
 {
   "code": 200,
@@ -516,6 +698,7 @@
 ## 7️⃣ 订单模块 `/user/orders`
 
 ### GET /user/orders - 获取订单列表
+**参数**: `{ page, size, status? }`
 ```json
 {
   "code": 200,
@@ -542,13 +725,12 @@
 ```
 
 ### POST /user/orders - 创建订单
+**参数**: `{ serviceId, patientId, hospital, department, appointmentTime, pickupOption, remarks?, paymentMethod? }`
 ```json
 {
   "code": 200,
   "msg": "订单创建成功",
-  "data": {
-    "orderId": "ORD20240315003"
-  }
+  "data": null
 }
 ```
 
@@ -565,7 +747,8 @@
     "hospital": "北京协和医院",
     "appointmentTime": "2024-03-16 09:00",
     "amount": 298.00,
-    "status": 2
+    "status": 2,
+    "serviceId": 1
   }
 }
 ```
@@ -580,6 +763,7 @@
 ```
 
 ### POST /user/orders/{id}/pay - 支付订单
+**参数**: `{ paymentMethod }`
 ```json
 {
   "code": 200,
@@ -598,6 +782,7 @@
 ```
 
 ### POST /user/orders/{id}/refund - 申请退款
+**参数**: `{ reason }`
 ```json
 {
   "code": 200,
@@ -607,6 +792,7 @@
 ```
 
 ### POST /user/orders/{id}/comment - 评价订单
+**参数**: `{ score, content }`
 ```json
 {
   "code": 200,
@@ -620,6 +806,7 @@
 ## 8️⃣ 收藏模块 `/user/favorites`
 
 ### GET /user/favorites - 获取收藏列表
+**参数**: `{ type? }`
 ```json
 {
   "code": 200,
@@ -639,6 +826,7 @@
 ```
 
 ### POST /user/favorites - 添加收藏
+**参数**: `{ type, itemId }`
 ```json
 {
   "code": 200,
@@ -683,15 +871,6 @@
       "preview": "收到，我会按时到达。",
       "avatar": "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
       "unreadCount": 1
-    },
-    {
-      "id": "system",
-      "type": "system",
-      "name": "系统通知",
-      "time": "03-14",
-      "preview": "您的订单已支付成功",
-      "avatar": "https://example.com/system-avatar.png",
-      "unreadCount": 0
     }
   ]
 }
@@ -729,6 +908,7 @@
 ## 🔟 聊天模块 `/user/chats`
 
 ### GET /user/chats/{type} - 获取聊天消息
+**参数**: `{ page, size }`
 ```json
 {
   "code": 200,
@@ -753,6 +933,7 @@
 ```
 
 ### POST /user/chats/{type}/messages - 发送消息
+**参数**: `{ text, type }`
 ```json
 {
   "code": 200,
@@ -798,6 +979,7 @@
 ```
 
 ### POST /user/recharge - 创建充值订单
+**参数**: `{ amount, method }`
 ```json
 {
   "code": 200,
@@ -818,13 +1000,6 @@
       "method": "wechat",
       "time": "2024-03-15 10:30:00",
       "status": "success"
-    },
-    {
-      "id": 2,
-      "amount": 200.00,
-      "method": "alipay",
-      "time": "2024-03-10 14:20:00",
-      "status": "success"
     }
   ]
 }
@@ -835,6 +1010,7 @@
 ## 1️⃣2️⃣ 钱包模块 `/user`
 
 ### GET /user/consumption - 获取消费记录
+**参数**: `{ page, size }`
 ```json
 {
   "code": 200,
@@ -859,6 +1035,7 @@
 ```
 
 ### GET /user/transactions - 获取交易记录
+**参数**: `{ page, size }`
 ```json
 {
   "code": 200,
@@ -886,13 +1063,13 @@
 ## 1️⃣3️⃣ 上传模块 `/upload`
 
 ### POST /upload/image - 上传图片
+**参数**: `FormData: file`
 ```json
 {
   "code": 200,
   "msg": "上传成功",
   "data": {
-    "url": "https://example.com/uploads/20240315/abc123.jpg",
-    "filename": "abc123.jpg"
+    "url": "https://example.com/uploads/20240315/abc123.jpg"
   }
 }
 ```
@@ -916,6 +1093,7 @@
 ```
 
 ### GET /dict/hospitals - 获取医院列表
+**参数**: `{ keyword? }`
 ```json
 {
   "code": 200,
@@ -938,6 +1116,7 @@
 ```
 
 ### GET /dict/departments - 获取科室列表
+**参数**: `{ hospitalId? }`
 ```json
 {
   "code": 200,
@@ -956,6 +1135,7 @@
 ## 1️⃣5️⃣ 反馈模块 `/user/feedback`
 
 ### POST /user/feedback - 提交反馈
+**参数**: `{ content, images?, contact? }`
 ```json
 {
   "code": 200,
@@ -978,15 +1158,6 @@
       "status": "pending",
       "reply": "",
       "time": "2024-03-15"
-    },
-    {
-      "id": 2,
-      "content": "APP很好用，感谢开发团队",
-      "images": [],
-      "contact": "",
-      "status": "completed",
-      "reply": "感谢您的支持！",
-      "time": "2024-03-10"
     }
   ]
 }
@@ -997,6 +1168,7 @@
 ## 1️⃣6️⃣ AI 模块 `/ai`
 
 ### POST /ai/chat - AI智能问答
+**参数**: `{ message }`
 ```json
 {
   "code": 200,
@@ -1022,6 +1194,15 @@
   "code": 200,
   "msg": "success",
   "data": { ... }
+}
+```
+
+### 无数据成功响应 (Void)
+```json
+{
+  "code": 200,
+  "msg": "操作成功",
+  "data": null
 }
 ```
 
@@ -1052,11 +1233,3 @@
 ```
 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
-
----
-
-## 📄 相关文件
-
-- **完整 JSON 格式**: [apifox-mock-expectations.json](./apifox-mock-expectations.json)
-- **缺失接口补充**: [apifox-missing-interfaces.json](./apifox-missing-interfaces.json)
-- **所有接口 OpenAPI**: [apifox-import-all-interfaces.json](./apifox-import-all-interfaces.json)

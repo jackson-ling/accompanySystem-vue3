@@ -79,20 +79,17 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
 import { ArrowLeft, Camera } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { updateUserProfile, updateUserAvatar } from '@/api/user'
-import { getCompanionProfile } from '@/api/companion'
+import { getCompanionProfile, updateCompanionProfile } from '@/api/companion'
 
 const router = useRouter()
-const userStore = useUserStore()
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 const fileInput = ref<HTMLInputElement | null>(null)
 
 const form = reactive({
-  nickname: userStore.userInfo?.nickname || '',
-  avatar: userStore.userInfo?.avatar || '',
+  nickname: '',
+  avatar: '',
   phone: '',
   age: '',
   experience: '',
@@ -124,13 +121,37 @@ const triggerFileUpload = () => {
   fileInput.value?.click()
 }
 
-const handleFileChange = (event: Event) => {
+// 压缩图片
+const compressImage = (base64: string, maxWidth = 200, quality = 0.7): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const scale = maxWidth / img.width
+      canvas.width = maxWidth
+      canvas.height = img.height * scale
+      const ctx = canvas.getContext('2d')
+      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.src = base64
+  })
+}
+
+const handleFileChange = async (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files[0]) {
     const file = target.files[0]
+    // 限制文件大小 2MB
+    if (file.size > 2 * 1024 * 1024) {
+      ElMessage.warning('图片大小不能超过2MB')
+      return
+    }
     const reader = new FileReader()
-    reader.onload = (e) => {
-      form.avatar = e.target?.result as string
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string
+      // 压缩图片
+      form.avatar = await compressImage(base64)
     }
     reader.readAsDataURL(file)
   }
@@ -143,18 +164,14 @@ const handleSave = async () => {
   }
 
   try {
-    // 调用API更新用户资料
-    await updateUserProfile({ nickname: form.nickname })
-
-    // 如果头像有更新，调用API更新头像
-    if (form.avatar) {
-      await updateUserAvatar({ avatar: form.avatar })
-    }
-
-    // 更新本地store
-    userStore.updateUserInfo({
+    // 调用API更新陪诊师资料
+    await updateCompanionProfile({
       nickname: form.nickname,
       avatar: form.avatar,
+      phone: form.phone,
+      age: form.age,
+      experience: form.experience,
+      introduction: form.introduction,
     })
 
     ElMessage.success('保存成功')

@@ -191,6 +191,12 @@ export interface FavoriteItem {
   avatar?: string
   description?: string
   time: string
+  gender?: string
+  age?: number
+  experience?: string
+  orders?: number
+  score?: number
+  comments?: number
 }
 
 export interface ConsumptionRecord {

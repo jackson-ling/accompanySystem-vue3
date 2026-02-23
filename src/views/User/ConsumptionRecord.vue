@@ -15,7 +15,7 @@
             <div class="time">{{ item.time }}</div>
           </div>
           <div class="item-right">
-            <div class="amount">-{{ item.amount.toFixed(2) }}</div>
+            <div class="amount">{{ formatAmount(item.amount) }}</div>
             <div class="balance">余额 {{ item.balance.toFixed(2) }}</div>
           </div>
         </div>
@@ -35,6 +35,14 @@ import type { ConsumptionRecord } from '@/types/api'
 const router = useRouter()
 const records = ref<ConsumptionRecord[]>([])
 const loading = ref(false)
+
+// 格式化金额显示
+const formatAmount = (amount: number) => {
+  // 如果已经是负数，直接显示；否则添加负号
+  const absAmount = Math.abs(amount)
+  const prefix = amount < 0 ? '' : '-'
+  return `${prefix}${absAmount.toFixed(2)}`
+}
 
 // 获取消费记录
 async function fetchRecords() {

@@ -219,51 +219,16 @@ const fetchOrderDetail = async () => {
 
   loading.value = false
   try {
-    // Mock data for demonstration
-    // await new Promise(resolve => setTimeout(resolve, 300))
+    const res = await getUserOrderDetail(orderId)
+    order.value = res
 
-    // Use existing order data or create mock data if none exists
-    if (!order.value) {
-      order.value = {
-        id: orderId || '202403200001',
-        serviceId: 1,
-        serviceName: '全程陪诊服务',
-        image:
-          'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-        price: 298,
-        status: 4, // Default to completed for demo
-        createTime: '2024-03-20 10:00:00',
-        payTime: '2024-03-20 10:05:00',
-        patientName: '张三',
-        phone: '138****1234',
-        hospital: '北京协和医院',
-        department: '内科',
-        appointmentTime: '2024-03-21 09:00',
-        pickupOption: '自行前往',
-        amount: 1,
-        companionId: 101,
-        companionName: '李华',
-        companionPhone: '139****5678',
-        companionAvatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-      } as any
-    }
-
-    // Mock service detail
-    if (!serviceDetail.value) {
-      serviceDetail.value = {
-        id: 1,
-        name: '全程陪诊服务',
-        description: '专业陪诊师全程陪同，包括取号、缴费、取药等',
-        price: 298,
-        sales: 1200,
-        duration: '4小时',
-      } as any
+    if (res.serviceId && !isNaN(Number(res.serviceId))) {
+      const serviceRes = await getServiceDetail(Number(res.serviceId))
+      serviceDetail.value = serviceRes
     }
   } catch (error: any) {
     console.error('获取订单详情失败:', error)
-    if (!order.value) {
-      ElMessage.error(error.message || '获取订单详情失败')
-    }
+    ElMessage.error(error.message || '获取订单详情失败')
   } finally {
     loading.value = false
   }

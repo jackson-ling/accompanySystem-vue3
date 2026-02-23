@@ -12,21 +12,21 @@
     <div class="status-card">
       <div class="card-content">
         <div class="avatar-box" @click="router.push('/companion/profile-edit')">
-          <el-avatar :size="60" :src="getUserAvatar(userStore.userInfo?.avatar)" />
+          <el-avatar :size="60" :src="companionProfile?.avatar || getUserAvatar(userStore.userInfo?.avatar)" />
           <div class="edit-badge">
             <el-icon :size="12" color="#fff"><Edit /></el-icon>
           </div>
         </div>
         <div class="info-box" @click="router.push('/companion/profile-edit')">
           <div class="name-row">
-            <span class="name">{{ userStore.userInfo?.nickname || '陪诊师' }}</span>
+            <span class="name">{{ companionProfile?.name || companionProfile?.nickname || '陪诊师' }}</span>
             <div class="status-indicator" :class="{ online: isOnline }" @click.stop="toggleStatus">
               <span class="dot"></span>
               {{ isOnline ? '接单中' : '休息中' }}
             </div>
           </div>
           <div class="detail-row">
-            <span class="info-text">{{ userStore.userInfo?.phone || '未设置手机号' }}</span>
+            <span class="info-text">{{ companionProfile?.phone || '未设置手机号' }}</span>
             <span class="divider">|</span>
             <span class="info-text">{{ companionProfile?.experience || '未知' }}</span>
           </div>
@@ -42,6 +42,7 @@
             active-text="开工"
             inactive-text="收工"
             size="large"
+            @change="toggleStatus"
             style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
           />
         </div>
@@ -221,7 +222,8 @@ const pendingOrders = computed(() => {
     return true
   })
 })
-const isOnline = ref(true)
+// 从本地存储获取开工状态，默认为 true
+const isOnline = ref(localStorage.getItem('companion_isOnline') !== 'false')
 
 // 获取统计数据
 async function fetchStatistics() {
@@ -235,7 +237,12 @@ async function fetchStatistics() {
 // 获取陪诊师个人信息
 async function fetchProfile() {
   try {
-    companionProfile.value = await getCompanionProfile()
+    const res = await getCompanionProfile()
+    companionProfile.value = res
+    // 如果返回了在线状态，则同步更新本地状态
+    if (res && typeof res.isOnline === 'boolean') {
+      isOnline.value = res.isOnline
+    }
   } catch (error) {
     console.error('获取陪诊师信息失败:', error)
   }
@@ -267,11 +274,8 @@ const handleReject = async (order: Order) => {
     // 调用 API 拒单
     await rejectOrder(String(order.id))
     ElMessage.success('已拒绝该订单')
-    // 从列表中移除
-    const index = rawPendingOrders.value.findIndex((o) => o.id === order.id)
-    if (index > -1) {
-      rawPendingOrders.value.splice(index, 1)
-    }
+    // 刷新待处理订单列表
+    await fetchPendingOrders()
   } catch (error) {
     // 用户取消操作
     if (error !== 'cancel') {
@@ -294,6 +298,8 @@ const handleAccept = async (order: Order) => {
     ElMessage.success('接单成功')
     // 更新本地状态为待服务(2)
     companionOrderStore.updateLocalStatus(order.id, 2)
+    // 刷新待处理订单列表
+    await fetchPendingOrders()
   } catch (error) {
     // 用户取消操作
     if (error !== 'cancel') {
@@ -307,11 +313,14 @@ const handleAccept = async (order: Order) => {
 async function toggleStatus() {
   try {
     await updateCompanionStatus(!isOnline.value)
-    isOnline.value = !isOnline.value
+    // 保存到本地存储
+    localStorage.setItem('companion_isOnline', String(isOnline.value))
     ElMessage.success(isOnline.value ? '已开始接单' : '已停止接单')
   } catch (error) {
     console.error('更新状态失败:', error)
     ElMessage.error('操作失败，请稍后重试')
+    // API 失败时回滚状态
+    isOnline.value = !isOnline.value
   }
 }
 

@@ -237,15 +237,6 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
-  // 尝试恢复登录状态
-  if (!userStore.isLogin && localStorage.getItem('token')) {
-    try {
-      await userStore.init()
-    } catch (error) {
-      console.error('Failed to restore login session:', error)
-    }
-  }
-
   if (to.meta.requiresAuth && !userStore.isLogin) {
     next({
       path: '/login',

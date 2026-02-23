@@ -187,7 +187,7 @@ import {
   ArrowDown,
 } from '@element-plus/icons-vue'
 import MobileImageViewer from '../../components/MobileImageViewer.vue'
-import { getCompanions, getCompanionReviews } from '@/api/companion'
+import { getCompanions, getCompanionDetail, getCompanionReviews } from '@/api/companion'
 import { getServices } from '@/api/service'
 import { getCompanionAvatar } from '@/constants/avatar'
 import type { Companion } from '@/types/api'
@@ -230,18 +230,14 @@ const companionListData = ref<CompanionDetailModel[]>([])
 async function fetchCompanionDetail() {
   loading.value = true
   try {
-    const res = await getCompanions({ page: 1, size: 50 })
-    companionListData.value = res.list.map((item) => ({
-      ...item,
-      collected: typeof item.collected === 'number' ? item.collected : item.collected ? 1 : 0,
-    }))
     const id = Number(route.params.id)
-    const found = res.list.find((c) => c.id === id)
-    if (found) {
+    // 使用 getCompanionDetail 获取单个陪诊师详情
+    const res = await getCompanionDetail(id)
+    if (res) {
       companion.value = {
-        ...found,
-        collected: typeof found.collected === 'number' ? found.collected : found.collected ? 1 : 0,
-      }
+        ...res,
+        collected: typeof res.collected === 'number' ? res.collected : res.collected ? 1 : 0,
+      } as CompanionDetailModel
       checkIntroOverflow()
       // 获取评论数据
       fetchComments()
@@ -280,15 +276,21 @@ const checkIntroOverflow = async () => {
   }
 }
 
-const toggleCollection = () => {
+const toggleCollection = async () => {
   if (!userStore.isLogin) {
     ElMessage.warning('请先登录')
     router.push('/login')
     return
   }
   if (!companion.value) return
-  companionStore.toggleFavorite(companion.value.id)
-  if (companionStore.isFavorite(companion.value.id)) {
+
+  const wasFavorite = companionStore.isFavorite(companion.value.id)
+  await companionStore.toggleFavorite(companion.value.id)
+  const isNowFavorite = companionStore.isFavorite(companion.value.id)
+
+  if (wasFavorite === isNowFavorite) return
+
+  if (isNowFavorite) {
     ElMessage.success('收藏成功')
     const current = typeof companion.value.collected === 'number' ? companion.value.collected : 0
     companion.value.collected = current + 1

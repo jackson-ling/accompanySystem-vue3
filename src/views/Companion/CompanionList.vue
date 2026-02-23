@@ -25,14 +25,14 @@
       <div
         class="filter-item"
         :class="{ active: currentFilter === 'score' }"
-        @click="currentFilter = 'score'"
+        @click="onSortChange('score')"
       >
         评分优先
       </div>
       <div
         class="filter-item"
         :class="{ active: currentFilter === 'sales' }"
-        @click="currentFilter = 'sales'"
+        @click="onSortChange('sales')"
       >
         服务量优先
       </div>
@@ -238,7 +238,7 @@
 defineOptions({
   name: 'CompanionList',
 })
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useCompanionStore } from '@/stores/companion'
@@ -289,25 +289,80 @@ onMounted(async () => {
   await companionStore.fetchCompanions()
 })
 
+// 存储已应用的筛选条件（只在点击确定后更新）
+const appliedFilter = ref({
+  gender: '',
+  categories: [] as number[],
+})
+
+// 提取通用的 API 调用逻辑
+const fetchCompanionsData = async () => {
+  console.log('[CompanionList] fetchCompanionsData called')
+  const params: any = {
+    page: 1,
+    size: 50,
+    keyword: searchText.value,
+  }
+  // 保持当前的排序和筛选条件
+  if (appliedFilter.value.gender) {
+    params.gender = appliedFilter.value.gender
+  }
+  if (appliedFilter.value.categories.length > 0) {
+    params.service = appliedFilter.value.categories[0]
+  }
+  if (currentFilter.value === 'score') {
+    params.sort = 'score_desc'
+  } else if (currentFilter.value === 'sales') {
+    params.sort = 'orders_desc'
+  }
+  console.log('[CompanionList] calling API with params:', params)
+  await companionStore.fetchCompanions(params)
+}
+
+// 排序切换
+const onSortChange = async (type: 'score' | 'sales') => {
+  console.log('[CompanionList] onSortChange triggered:', type)
+  if (currentFilter.value === type) return
+  currentFilter.value = type
+  await fetchCompanionsData()
+}
+
+// 监听搜索文本变化，防抖调用 API
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(searchText, (newVal: string) => {
+  console.log('[CompanionList] Search text changed:', newVal)
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    console.log('[CompanionList] Triggering search API with:', newVal)
+    fetchCompanionsData()
+  }, 500)
+})
+
 const filteredCompanions = computed(() => {
+  // 由于 API 已经根据 keyword 返回了过滤后的结果，
+  // 这里不再需要在前端进行 name.includes 过滤，除非 API 不支持模糊搜索。
+  // 但为了兼容性，如果 API 返回了所有数据，这里的前端过滤也不会有副作用（只要包含关键词）。
+  // 考虑到分页，最好依赖 API。
+  // 此处仅做前端排序兜底（如果 API 返回未排序）
   let list = [...companionList.value]
 
-  // Filter by gender
-  if (filterForm.value.gender) {
-    list = list.filter((c) => c.gender === filterForm.value.gender)
+  // Filter by gender (前端兜底)
+  if (appliedFilter.value.gender) {
+    list = list.filter((c) => c.gender === appliedFilter.value.gender)
   }
+  // ... 其他前端兜底逻辑保持不变 ...
 
-  // Filter by categories
-  if (filterForm.value.categories.length > 0) {
+  // Filter by categories (使用已应用的条件)
+  if (appliedFilter.value.categories.length > 0) {
     list = list.filter(
-      (c) => c.services && c.services.some((sId) => filterForm.value.categories.includes(sId)),
+      (c) => c.services && c.services.some((sId) => appliedFilter.value.categories.includes(sId)),
     )
   }
 
-  // Filter by search text
-  if (searchText.value) {
-    list = list.filter((c) => c.name.includes(searchText.value))
-  }
+  // Filter by search text (API 已处理，前端不再重复过滤，除非需要高亮)
+  // if (searchText.value) {
+  //   list = list.filter((c) => c.name.includes(searchText.value))
+  // }
 
   // Sort
   if (currentFilter.value === 'score') {
@@ -332,29 +387,17 @@ const resetFilter = () => {
   filterForm.value.gender = ''
   filterForm.value.categories = []
   filterForm.value.serviceType = ''
+  // 同时重置已应用的筛选条件
+  appliedFilter.value.gender = ''
+  appliedFilter.value.categories = []
 }
 
 const applyFilter = async () => {
   showFilter.value = false
-  // 调用 API 获取筛选后的陪诊师数据
-  const params: any = {
-    page: 1,
-    size: 50,
-  }
-  if (filterForm.value.gender) {
-    params.gender = filterForm.value.gender
-  }
-  if (filterForm.value.categories.length > 0) {
-    // 使用第一个服务分类进行筛选（API 参数为 service）
-    params.service = filterForm.value.categories[0]
-  }
-  // 排序方式
-  if (currentFilter.value === 'score') {
-    params.sort = 'score_desc'
-  } else if (currentFilter.value === 'sales') {
-    params.sort = 'orders_desc'
-  }
-  await companionStore.fetchCompanions(params)
+  // 保存已应用的筛选条件
+  appliedFilter.value.gender = filterForm.value.gender
+  appliedFilter.value.categories = [...filterForm.value.categories]
+  await fetchCompanionsData()
 }
 
 const goToDetail = (id: number) => {
@@ -865,7 +908,8 @@ const selectService = (service: any) => {
 
 /* Filter Drawer Styles */
 :global(.filter-drawer) {
-  width: calc(100% - 100px) !important;
+  width: 100% !important;
+  max-width: 300px;
 }
 
 :global(.filter-drawer .el-drawer__body) {

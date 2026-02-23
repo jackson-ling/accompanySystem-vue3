@@ -92,7 +92,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const amounts = ref<number[]>([50, 100, 200, 500, 1000])
-const selectedAmount = ref(100)
+const selectedAmount = ref(50)
 const customAmount = ref('')
 const isCustomAmount = ref(false)
 const payMethod = ref('wechat')
@@ -104,7 +104,10 @@ const fetchRechargeConfig = async () => {
     const config = await getRechargeConfig()
     if (config && config.amounts && config.amounts.length > 0) {
       amounts.value = config.amounts
-      selectedAmount.value = config.amounts[0] as number
+      // 只有当当前选中的金额不在列表里，且列表不为空时，才默认选中第一个
+      if (!config.amounts.includes(selectedAmount.value) && !isCustomAmount.value) {
+        selectedAmount.value = config.amounts[0] as number
+      }
     }
   } catch (error) {
     console.error('获取充值配置失败:', error)

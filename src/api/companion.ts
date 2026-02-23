@@ -65,6 +65,18 @@ export function getCompanionProfile() {
   return request.get<any, any>('/companion/profile')
 }
 
+/** 更新陪诊师个人信息 */
+export function updateCompanionProfile(data: {
+  nickname?: string
+  avatar?: string
+  phone?: string
+  age?: string
+  experience?: string
+  introduction?: string
+}) {
+  return request.put<any, void>('/companion/profile', data)
+}
+
 /** 陪诊师接单 */
 export function acceptOrder(orderId: string) {
   return request.put<any, Order>(`/companion/orders/${orderId}/accept`)

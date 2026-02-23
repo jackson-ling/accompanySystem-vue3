@@ -385,6 +385,9 @@ const formattedServiceTime = computed(() => {
 })
 
 onMounted(() => {
+  // 重置预约时间，确保每次进入都是新的
+  appointmentTime.value = ''
+  
   fetchData()
   // 刷新用户余额
   userStore.fetchBalance()
