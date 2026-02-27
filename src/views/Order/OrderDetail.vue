@@ -368,8 +368,11 @@ const handleSubmitEvaluation = async () => {
     })
 
     submitLoading.value = true
-    // Mock API call simulation
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    // 调用评价API
+    await evaluateOrder(orderId, {
+      score: evaluationForm.value.score,
+      content: evaluationForm.value.content,
+    })
 
     // Update local order data to reflect evaluation
     if (order.value) {
@@ -382,9 +385,6 @@ const handleSubmitEvaluation = async () => {
 
     ElMessageBox.alert('评价提交成功', '提示', {
       confirmButtonText: '确定',
-      callback: () => {
-        // No need to fetch from backend since it's a mock
-      },
     })
   } catch (error) {
     if (error !== 'cancel') {

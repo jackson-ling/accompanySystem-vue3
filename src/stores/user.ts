@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import type { Patient, UserProfile } from '@/types/api'
 import { login as loginApi, logout as logoutApi } from '@/api/auth'
 import { getUserProfile, getUserBalance } from '@/api/user'
-import { getPatients, createPatient, updatePatient as updatePatientApi, deletePatient as deletePatientApi } from '@/api/patient'
+import { getPatients, createPatient, updatePatient as updatePatientApi, deletePatient as deletePatientApi, setDefaultPatient } from '@/api/patient'
 
 // 重新导出类型以保持向后兼容
 export type { Patient }
@@ -34,6 +34,23 @@ export const useUserStore = defineStore('user', () => {
       await fetchPatients()
     } catch (error) {
       console.error('Failed to update patient:', error)
+      throw error
+    }
+  }
+
+  // 设置默认就诊人
+  const setPatientDefault = async (id: number) => {
+    try {
+      await setDefaultPatient(id)
+      // 更新本地状态：将其他就诊人设为非默认，当前设为默认
+      patients.value = patients.value.map((p) => ({
+        ...p,
+        default: p.id === id,
+      }))
+      // 同时更新选中的就诊人
+      selectedPatientId.value = id
+    } catch (error) {
+      console.error('Failed to set default patient:', error)
       throw error
     }
   }
@@ -147,6 +164,7 @@ export const useUserStore = defineStore('user', () => {
     selectedPatientId,
     addPatient,
     updatePatient,
+    setPatientDefault,
     deletePatient,
     selectPatient,
     getSelectedPatient,

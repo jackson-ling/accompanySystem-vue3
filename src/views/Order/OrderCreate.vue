@@ -255,6 +255,7 @@ import SlidingSegment from '@/components/UI/SlidingSegment.vue'
 import CompanionSelector from '@/components/appointment/CompanionSelector.vue'
 import { getServices } from '@/api/service'
 import { getCompanions } from '@/api/companion'
+import { getAvailableTimes } from '@/api/order'
 import type { ServiceItem } from '@/types/api'
 import type { Companion } from '@/types/api'
 
@@ -436,7 +437,18 @@ const generateTimes = async (dateIndex: number) => {
   const selectedDate = dateList.value[dateIndex]
   if (!selectedDate) return
 
-  // 直接生成本地时间段
+  // 如果已选择陪诊师，调用API获取可用时间段
+  if (selectedCompanion.value?.id) {
+    try {
+      const times = await getAvailableTimes(selectedCompanion.value.id, selectedDate.dateStr)
+      availableTimes.value = times
+      return
+    } catch (error) {
+      console.error('获取可用时间段失败，使用本地生成:', error)
+    }
+  }
+
+  // API调用失败或未选择陪诊师时，使用本地生成
   generateLocalTimes(dateIndex)
 }
 

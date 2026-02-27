@@ -60,3 +60,16 @@ export function startCompanionOrder(id: string | number) {
 export function completeCompanionOrder(id: string | number, data: { serviceContent: string; images: string[] }) {
   return request.put<any, void>(`/companion/orders/${id}/complete`, data)
 }
+
+// 可用时间段类型
+export interface AvailableTimeSlot {
+  time: string
+  status: 'available' | 'booked'
+}
+
+// 获取可用时间段
+export function getAvailableTimes(companionId: number, date: string) {
+  return request.get<any, AvailableTimeSlot[]>(`/companion/${companionId}/available-times`, {
+    params: { date },
+  })
+}

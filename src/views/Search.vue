@@ -153,11 +153,12 @@ const goBack = () => {
   }
 }
 
-const performSearch = (text: string) => {
+const performSearch = async (text: string) => {
   if (!text.trim()) return
 
   searchText.value = text
   showResults.value = true
+  isSearching.value = true
 
   // Save to history
   const index = historyList.value.indexOf(text)
@@ -170,10 +171,16 @@ const performSearch = (text: string) => {
   }
   localStorage.setItem('searchHistory', JSON.stringify(historyList.value))
 
-  // Filter services
-  filteredServices.value = allServices.value.filter(
-    (service: ServiceItem) => service.name.includes(text) || service.description.includes(text),
-  )
+  // 调用API搜索服务
+  try {
+    const res = await getServices({ keyword: text })
+    filteredServices.value = res
+  } catch (error) {
+    console.error('搜索服务失败:', error)
+    filteredServices.value = []
+  } finally {
+    isSearching.value = false
+  }
 }
 
 const clearHistory = () => {

@@ -35,6 +35,21 @@
           {{ msg.text }}
         </div>
       </div>
+
+      <!-- 建议问题 -->
+      <div v-if="suggestions.length > 0" class="suggestions-container">
+        <div class="suggestions-title">猜你想问</div>
+        <div class="suggestions-list">
+          <div
+            v-for="(item, index) in suggestions"
+            :key="index"
+            class="suggestion-item"
+            @click="sendSuggestion(item)"
+          >
+            {{ item }}
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Input Area -->
@@ -65,13 +80,46 @@ import { ref, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Cpu, UserFilled, MoreFilled } from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
+import { clearAiChat, getAiChatHistory, chatWithAi } from '@/api/ai'
 
 const router = useRouter()
 const inputText = ref('')
 const chatContainer = ref<HTMLElement | null>(null)
 
-const messages = ref([{ text: '您好！我是您的智能陪诊助手，请问有什么可以帮您？', isMe: false }])
+const messages = ref<{ text: string; isMe: boolean }[]>([])
 const showMenu = ref(false)
+const hasInitialized = ref(false) // 标记是否已经初始化过
+const isLoading = ref(false) // 标记AI是否正在回复
+const suggestions = ref<string[]>([]) // AI回复的建议问题
+
+// 获取聊天历史记录
+const fetchChatHistory = async () => {
+  try {
+    const history = await getAiChatHistory()
+    if (history && history.length > 0) {
+      messages.value = history
+      hasInitialized.value = true
+    } else {
+      // 检查是否已经初始化过（清空过）
+      const isCleared = localStorage.getItem('ai_chat_cleared') === 'true'
+      if (isCleared || hasInitialized.value) {
+        // 如果已经清空过，显示空白
+        messages.value = []
+      } else {
+        // 首次进入显示初始消息
+        messages.value = [{ text: '您好！我是您的智能陪诊助手，请问有什么可以帮您？', isMe: false }]
+        hasInitialized.value = true
+      }
+    }
+  } catch (error) {
+    // 获取失败时显示初始消息
+    messages.value = [{ text: '您好！我是您的智能陪诊助手，请问有什么可以帮您？', isMe: false }]
+  }
+}
+
+onMounted(() => {
+  fetchChatHistory()
+})
 
 const handleBack = () => {
   if (window.history.length > 1) {
@@ -85,40 +133,76 @@ const toggleMenu = () => {
   showMenu.value = !showMenu.value
 }
 
-const handleMenuAction = (command: string) => {
+const handleMenuAction = async (command: string) => {
   showMenu.value = false
   if (command === 'clear') {
-    ElMessageBox.confirm('确定要清空当前聊天记录吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-      .then(() => {
-        messages.value = [{ text: '您好！我是您的智能陪诊助手，请问有什么可以帮您？', isMe: false }]
-        ElMessage.success('已清空聊天记录')
+    try {
+      await ElMessageBox.confirm('确定要清空当前聊天记录吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
       })
-      .catch(() => {})
+      // 调用清空API
+      await clearAiChat()
+      // 清空本地聊天记录，标记已清空状态
+      messages.value = []
+      hasInitialized.value = true
+      localStorage.setItem('ai_chat_cleared', 'true')
+      ElMessage.success('已清空聊天记录')
+    } catch (error) {
+      // 用户取消时不提示
+      if (error !== 'cancel') {
+        console.error('清空聊天记录失败:', error)
+        ElMessage.error('清空失败，请重试')
+      }
+    }
   }
 }
 
 const sendMessage = async () => {
   if (!inputText.value.trim()) return
 
-  // User message
-  messages.value.push({ text: inputText.value, isMe: true })
   const userQuery = inputText.value
+  await doSendMessage(userQuery)
+}
+
+// 发送建议问题
+const sendSuggestion = async (text: string) => {
+  await doSendMessage(text)
+}
+
+// 统一的发送消息逻辑
+const doSendMessage = async (userQuery: string) => {
+  // User message
+  messages.value.push({ text: userQuery, isMe: true })
   inputText.value = ''
+
+  // 清除之前的建议问题
+  suggestions.value = []
+
+  // 显示加载状态
+  isLoading.value = true
 
   await scrollToBottom()
 
-  // Mock AI response
-  setTimeout(async () => {
+  // 调用AI聊天API
+  try {
+    const res = await chatWithAi({ message: userQuery })
     messages.value.push({
-      text: `收到您的问题：“${userQuery}”。我们的陪诊服务包括全天、半天及代办服务，您可以直接在首页预约。`,
+      text: res.reply,
       isMe: false,
     })
+    // 保存建议问题
+    if (res.suggestions && res.suggestions.length > 0) {
+      suggestions.value = res.suggestions
+    }
+  } catch (error) {
+    console.error('AI回复失败:', error)
+    ElMessage.error('AI回复失败，请重试')
+  } finally {
+    isLoading.value = false
     await scrollToBottom()
-  }, 1000)
+  }
 }
 
 const scrollToBottom = async () => {
@@ -320,6 +404,41 @@ onMounted(() => {
       position: relative;
       word-break: break-all;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+// 建议问题样式
+.suggestions-container {
+  margin-top: 10px;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  margin-left: 50px;
+
+  .suggestions-title {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 8px;
+  }
+
+  .suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .suggestion-item {
+    padding: 8px 12px;
+    background-color: #fff;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #409eff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:active {
+      background-color: #e4e7ed;
     }
   }
 }

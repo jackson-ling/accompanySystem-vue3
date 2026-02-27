@@ -213,33 +213,13 @@ const sendMessage = async () => {
   // 调用API发送消息
   try {
     await sendChatMessage(type, { text: userQuery, type: 'text' })
+    // 发送成功后，刷新消息列表获取最新回复
+    await messageStore.fetchChatHistory(type)
+    await scrollToBottom()
   } catch (error) {
     console.error('发送消息失败:', error)
+    ElMessage.error('发送消息失败，请重试')
   }
-
-  // Mock response based on chat type (等待API响应后显示)
-  setTimeout(async () => {
-    let replyText = ''
-
-    if (type === 'service') {
-      replyText = '收到您的消息，客服专员会尽快回复您。'
-      if (userQuery.includes('流程')) {
-        replyText = '我们的服务流程是：\n1. 在线下单\n2. 专人接单联系\n3. 到院陪诊\n4. 服务结束确认'
-      } else if (userQuery.includes('价')) {
-        replyText = '我们的基础陪诊服务价格为半天198元，全天298元。具体价格请参考首页服务详情。'
-      }
-    } else if (type === 'companion') {
-      replyText = '收到，我会按时到达。如有变动请及时联系我。'
-    }
-
-    if (replyText) {
-      messageStore.addMessage(type, {
-        text: replyText,
-        isMe: false,
-      })
-      await scrollToBottom()
-    }
-  }, 1000)
 }
 
 const scrollToBottom = async () => {

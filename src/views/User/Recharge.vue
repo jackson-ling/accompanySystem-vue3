@@ -97,6 +97,7 @@ const customAmount = ref('')
 const isCustomAmount = ref(false)
 const payMethod = ref('wechat')
 const customInputRef = ref()
+const hasShownMaxWarning = ref(false)
 
 // 获取充值配置
 const fetchRechargeConfig = async () => {
@@ -135,7 +136,14 @@ const selectCustom = () => {
 const handleCustomAmountInput = () => {
   if (Number(customAmount.value) > 9999) {
     customAmount.value = '9999'
-    ElMessage.warning('单次充值金额不能超过9999元')
+    // 防抖：只提示一次
+    if (!hasShownMaxWarning.value) {
+      hasShownMaxWarning.value = true
+      ElMessage.warning('单次充值金额不能超过9999元')
+    }
+  } else {
+    // 重置防抖标志
+    hasShownMaxWarning.value = false
   }
 }
 

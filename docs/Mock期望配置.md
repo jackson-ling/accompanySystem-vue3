@@ -8,7 +8,7 @@
 | 用户模块 | 5 |
 | 就诊人模块 | 5 |
 | 服务模块 | 3 |
-| 陪诊师模块 | 13 |
+| 陪诊师模块 | 14 |
 | 订单模块 | 13 |
 | 收藏模块 | 3 |
 | 消息模块 | 4 |
@@ -18,8 +18,8 @@
 | 上传模块 | 1 |
 | 字典模块 | 3 |
 | 反馈模块 | 2 |
-| AI 模块 | 1 |
-| **总计** | **65** |
+| AI 模块 | 3 |
+| **总计** | **68** |
 
 ---
 
@@ -470,6 +470,27 @@
   "code": 200,
   "msg": "操作成功",
   "data": null
+}
+```
+
+### GET /companions/{id}/available-times - 获取陪诊师可用时间段
+**参数**: `{ date }` (格式：YYYY-MM-DD)
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": [
+    { "time": "09:00", "status": "available" },
+    { "time": "09:30", "status": "available" },
+    { "time": "10:00", "status": "booked" },
+    { "time": "10:30", "status": "available" },
+    { "time": "11:00", "status": "available" },
+    { "time": "11:30", "status": "booked" },
+    { "time": "14:00", "status": "available" },
+    { "time": "14:30", "status": "available" },
+    { "time": "15:00", "status": "booked" },
+    { "time": "15:30", "status": "available" }
+  ]
 }
 ```
 
@@ -1167,6 +1188,34 @@
 
 ## 1️⃣6️⃣ AI 模块 `/ai`
 
+### GET /ai/chat - 获取AI聊天历史记录
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": [
+    {
+      "id": 1,
+      "text": "您好！我是您的智能陪诊助手，请问有什么可以帮您？",
+      "isMe": false,
+      "time": "10:00"
+    },
+    {
+      "id": 2,
+      "text": "我想咨询陪诊服务",
+      "isMe": true,
+      "time": "10:01"
+    },
+    {
+      "id": 3,
+      "text": "陪诊服务是指专业的陪诊师陪同患者就医的服务，包括协助挂号、陪同就诊、代取报告、代取药品等。",
+      "isMe": false,
+      "time": "10:01"
+    }
+  ]
+}
+```
+
 ### POST /ai/chat - AI智能问答
 **参数**: `{ message }`
 ```json
@@ -1181,6 +1230,15 @@
       "陪诊服务的收费标准是什么？"
     ]
   }
+}
+```
+
+### DELETE /ai/chat - 清空AI聊天记录
+```json
+{
+  "code": 200,
+  "msg": "聊天记录已清空",
+  "data": null
 }
 ```
 

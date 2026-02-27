@@ -20,16 +20,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import TabBar from '@/components/TabBar.vue'
+import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 const transitionName = ref('')
 const previousPath = ref('')
 const tabBarVisible = ref(false)
 let tabBarTimer: ReturnType<typeof setTimeout> | null = null
+
+// 初始化登录状态
+onMounted(() => {
+  userStore.init()
+})
 
 // State to track navigation context
 const isFromTab = ref(false)

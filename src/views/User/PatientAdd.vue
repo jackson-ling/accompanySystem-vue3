@@ -127,31 +127,71 @@ onMounted(() => {
   }
 })
 
-const handleSave = () => {
+const handleSave = async () => {
   if (!form.value.name || !form.value.phone || !form.value.address) {
     ElMessage.warning('请填写完整信息')
     return
   }
 
-  if (isEdit.value && editId.value) {
-    userStore.updatePatient({
-      id: editId.value,
-      name: form.value.name,
-      phone: form.value.phone,
-      address: form.value.address,
-      relationship: form.value.relationship,
-      default: form.value.default,
-    })
-    ElMessage.success('修改成功')
+  // 如果设置为默认就诊人，需要先取消其他默认，再设置当前为默认
+  if (form.value.default) {
+    try {
+      if (isEdit.value && editId.value) {
+        // 编辑模式：更新当前就诊人信息，然后设置为默认
+        await userStore.updatePatient({
+          id: editId.value,
+          name: form.value.name,
+          phone: form.value.phone,
+          address: form.value.address,
+          relationship: form.value.relationship,
+          default: form.value.default,
+        })
+        await userStore.setPatientDefault(editId.value)
+        ElMessage.success('修改成功')
+      } else {
+        // 新增模式：先添加就诊人，然后设置为默认
+        await userStore.addPatient({
+          name: form.value.name,
+          phone: form.value.phone,
+          address: form.value.address,
+          relationship: form.value.relationship,
+          default: form.value.default,
+        })
+        // 获取刚添加的就诊人ID并设置为默认（需要刷新列表后获取）
+        await userStore.fetchPatients()
+        const newPatient = userStore.patients.find((p) => p.phone === form.value.phone)
+        if (newPatient) {
+          await userStore.setPatientDefault(newPatient.id)
+        }
+        ElMessage.success('添加成功')
+      }
+    } catch (error) {
+      console.error('保存就诊人失败:', error)
+      ElMessage.error('保存失败，请重试')
+      return
+    }
   } else {
-    userStore.addPatient({
-      name: form.value.name,
-      phone: form.value.phone,
-      address: form.value.address,
-      relationship: form.value.relationship,
-      default: form.value.default,
-    })
-    ElMessage.success('添加成功')
+    // 非默认就诊人，直接保存
+    if (isEdit.value && editId.value) {
+      await userStore.updatePatient({
+        id: editId.value,
+        name: form.value.name,
+        phone: form.value.phone,
+        address: form.value.address,
+        relationship: form.value.relationship,
+        default: form.value.default,
+      })
+      ElMessage.success('修改成功')
+    } else {
+      await userStore.addPatient({
+        name: form.value.name,
+        phone: form.value.phone,
+        address: form.value.address,
+        relationship: form.value.relationship,
+        default: form.value.default,
+      })
+      ElMessage.success('添加成功')
+    }
   }
 
   router.back()
@@ -299,6 +339,17 @@ const handleSave = () => {
     background-color: #409eff;
     color: #fff;
     border: none;
+  }
+}
+
+// 确保关系选择器文字颜色正确
+:deep(.sliding-segment) {
+  .segment-item {
+    color: rgba(255, 255, 255, 0.8);
+
+    &.active {
+      color: #fff;
+    }
   }
 }
 </style>
