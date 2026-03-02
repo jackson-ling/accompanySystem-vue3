@@ -297,7 +297,6 @@ const appliedFilter = ref({
 
 // 提取通用的 API 调用逻辑
 const fetchCompanionsData = async () => {
-  console.log('[CompanionList] fetchCompanionsData called')
   const params: any = {
     page: 1,
     size: 50,
@@ -315,13 +314,11 @@ const fetchCompanionsData = async () => {
   } else if (currentFilter.value === 'sales') {
     params.sort = 'orders_desc'
   }
-  console.log('[CompanionList] calling API with params:', params)
   await companionStore.fetchCompanions(params)
 }
 
 // 排序切换
 const onSortChange = async (type: 'score' | 'sales') => {
-  console.log('[CompanionList] onSortChange triggered:', type)
   if (currentFilter.value === type) return
   currentFilter.value = type
   await fetchCompanionsData()
@@ -330,10 +327,8 @@ const onSortChange = async (type: 'score' | 'sales') => {
 // 监听搜索文本变化，防抖调用 API
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 watch(searchText, (newVal: string) => {
-  console.log('[CompanionList] Search text changed:', newVal)
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
-    console.log('[CompanionList] Triggering search API with:', newVal)
     fetchCompanionsData()
   }, 500)
 })
@@ -383,13 +378,16 @@ const toggleCategory = (id: number) => {
   }
 }
 
-const resetFilter = () => {
+const resetFilter = async () => {
+  // 清空表单选项，并发送请求查询所有数据
   filterForm.value.gender = ''
   filterForm.value.categories = []
   filterForm.value.serviceType = ''
-  // 同时重置已应用的筛选条件
+  // 重置已应用的筛选条件
   appliedFilter.value.gender = ''
   appliedFilter.value.categories = []
+  // 发送请求查询数据
+  await fetchCompanionsData()
 }
 
 const applyFilter = async () => {

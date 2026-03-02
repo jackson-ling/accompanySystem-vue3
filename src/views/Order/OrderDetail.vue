@@ -213,7 +213,6 @@ const fetchOrderDetail = async () => {
   // Try to load from history state first for immediate display
   const historyState = history.state
   if (historyState && historyState.orderData) {
-    console.log('Loading order from history state', historyState.orderData)
     order.value = historyState.orderData
   }
 

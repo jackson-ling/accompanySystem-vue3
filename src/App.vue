@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, computed, onMounted } from 'vue'
+import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import TabBar from '@/components/TabBar.vue'
 import { useUserStore } from '@/stores/user'
@@ -36,6 +36,14 @@ let tabBarTimer: ReturnType<typeof setTimeout> | null = null
 // 初始化登录状态
 onMounted(() => {
   userStore.init()
+})
+
+// 清理定时器，避免内存泄漏
+onUnmounted(() => {
+  if (tabBarTimer) {
+    clearTimeout(tabBarTimer)
+    tabBarTimer = null
+  }
 })
 
 // State to track navigation context

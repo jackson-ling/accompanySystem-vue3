@@ -171,14 +171,13 @@ const handleMenuAction = (command: string) => {
       .then(async () => {
         // 确保 chatType 是字符串
         const type = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-        console.log('Deleting chat type:', type)
 
         if (type) {
           try {
             // 调用API删除聊天
             await deleteChat(type)
           } catch (error) {
-            console.error('删除聊天失败:', error)
+            ElMessage.error('删除聊天失败')
           }
           // 同时清理本地store
           messageStore.deleteMessage(type)

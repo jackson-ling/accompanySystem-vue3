@@ -21,7 +21,10 @@
           />
         </div>
 
-        <MobileImageViewer v-model:visible="showViewer" :url="getCompanionAvatar(companion.avatar)" />
+        <MobileImageViewer
+          v-model:visible="showViewer"
+          :url="getCompanionAvatar(companion.avatar)"
+        />
 
         <div class="profile-header">
           <div class="info-card">
@@ -278,7 +281,6 @@ const checkIntroOverflow = async () => {
 
 const toggleCollection = async () => {
   if (!userStore.isLogin) {
-    ElMessage.warning('请先登录')
     router.push('/login')
     return
   }
