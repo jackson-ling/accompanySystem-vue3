@@ -8,7 +8,7 @@ import uviewPlus from 'uview-plus'
 import 'uview-plus/index.scss'
 
 import App from './App.vue'
-import router from './router/index.ts' // Explicit extension to avoid cache issues
+import router from './router/index'
 
 import './styles/main.scss'
 

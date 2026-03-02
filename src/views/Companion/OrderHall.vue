@@ -90,9 +90,7 @@ const handleGrab = async (order: AvailableOrder) => {
 async function fetchAvailableOrders() {
   loading.value = true
   try {
-    console.log('[OrderHall] 开始获取可接订单...')
     const res = await getAvailableOrders({ page: 1, size: 50 })
-    console.log('[OrderHall] 接口返回:', res)
 
     // 如果返回的数据有 list 字段，使用它；否则直接使用返回值
     if (res && typeof res === 'object') {
@@ -107,10 +105,8 @@ async function fetchAvailableOrders() {
     } else {
       availableOrders.value = []
     }
-
-    console.log('[OrderHall] 订单列表:', availableOrders.value)
   } catch (error) {
-    console.error('获取可接订单失败:', error)
+    ElMessage.error('获取可接订单失败')
     // API失败时显示空列表
     availableOrders.value = []
   } finally {

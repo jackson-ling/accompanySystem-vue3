@@ -2,10 +2,10 @@
   <div class="sliding-segment">
     <div class="segment-bg" :style="bgStyle"></div>
     <div
-      v-for="option in options"
+      v-for="(option, index) in options"
       :key="option.value"
       class="segment-item"
-      :class="{ active: modelValue === option.value }"
+      :class="{ active: index === currentIndex }"
       @click="select(option.value)"
     >
       {{ option.label }}
@@ -15,7 +15,7 @@
 
 <script lang="ts">
 export default {
-  name: 'SlidingSegment'
+  name: 'SlidingSegment',
 }
 </script>
 
@@ -40,17 +40,17 @@ const select = (value: string | number) => {
 }
 
 const currentIndex = computed(() => {
-  return props.options.findIndex((opt) => opt.value === props.modelValue)
+  const index = props.options.findIndex((opt) => String(opt.value) === String(props.modelValue))
+  return index === -1 ? 0 : index
 })
 
 const bgStyle = computed(() => {
   const count = props.options.length
-  if (count === 0) return {}
-  const index = currentIndex.value === -1 ? 0 : currentIndex.value
+  if (count === 0) return { display: 'none' }
 
   return {
     width: `calc((100% - 8px) / ${count})`,
-    transform: `translateX(${index * 100}%)`,
+    transform: `translateX(${currentIndex.value * 100}%)`,
     left: '4px',
   }
 })

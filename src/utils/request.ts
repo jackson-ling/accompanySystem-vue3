@@ -27,15 +27,9 @@ service.interceptors.request.use(
       config.headers['token'] = token
     }
 
-    // 开发环境打印请求日志
-    if (import.meta.env.DEV) {
-      console.log('[Request]', config.method?.toUpperCase(), config.url, config.data || config.params)
-    }
-
     return config
   },
   (error) => {
-    console.error('[Request Error]', error)
     return Promise.reject(error)
   }
 )
@@ -44,11 +38,6 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data
-
-    // 开发环境打印响应日志
-    if (import.meta.env.DEV) {
-      console.log('[Response]', response.config.url, res)
-    }
 
     // 处理文件下载
     if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
@@ -78,11 +67,6 @@ service.interceptors.response.use(
   (error: AxiosError) => {
     const config = error.config as CustomAxiosRequestConfig
 
-    // 开发环境打印错误日志
-    if (import.meta.env.DEV) {
-      console.error('[Response Error]', error)
-    }
-
     // 处理 401 未授权
     if (error.response?.status === 401) {
       handleUnauthorized()
@@ -97,7 +81,6 @@ service.interceptors.response.use(
 
       if (config.__retryCount < retry) {
         config.__retryCount += 1
-        console.log(`[Retry] ${config.method?.toUpperCase()} ${config.url} (${config.__retryCount}/${retry})`)
         return new Promise((resolve) => {
           setTimeout(() => resolve(service(config)), retryDelay)
         })

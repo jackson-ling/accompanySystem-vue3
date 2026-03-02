@@ -345,10 +345,11 @@ const handleSave = async () => {
 // 确保关系选择器文字颜色正确
 :deep(.sliding-segment) {
   .segment-item {
-    color: rgba(255, 255, 255, 0.8);
+    color: #666;
 
     &.active {
       color: #fff;
+      font-weight: bold;
     }
   }
 }

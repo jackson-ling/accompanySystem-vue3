@@ -229,16 +229,13 @@ const handleTabClick = async (tab: any) => {
 const navigateToDetail = (order: Order) => {
   const id = order.id
   if (id === undefined || id === null || id === '') {
-    console.error('无效的订单ID:', id)
     ElMessage.error('无法查看详情：订单ID无效')
     return
   }
-  console.log('Navigating to order detail:', id)
 
   // Debug: Check if route exists
   const routeExists = router.hasRoute('order-detail')
   if (!routeExists) {
-    console.error('Critical Error: Route "order-detail" not found!')
     ElMessage.error('系统错误：详情页路由未注册')
     return
   }

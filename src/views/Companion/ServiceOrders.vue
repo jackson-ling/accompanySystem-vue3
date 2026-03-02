@@ -185,7 +185,6 @@ const fetchOrders = async () => {
   loading.value = true
   try {
     const res = await getCompanionOrders()
-    console.log('[ServiceOrders] API返回:', res)
     // The API returns PaginatedResult<Order>, but TS might be confused by the assignment
     // We explicitly access the list property if available
     if (res && typeof res === 'object') {
@@ -206,7 +205,6 @@ const fetchOrders = async () => {
     } else {
       orders.value = []
     }
-    console.log('[ServiceOrders] 订单列表:', orders.value)
   } catch (error) {
     console.error('获取订单失败:', error)
     ElMessage.error('获取订单失败，请稍后重试')

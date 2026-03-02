@@ -49,7 +49,12 @@ async function fetchRecords() {
   loading.value = true
   try {
     const res = await getConsumptionRecords()
-    records.value = res.list || res || []
+    // API 返回 PaginatedResult，检查是否有 list 属性
+    if (res && 'list' in res) {
+      records.value = res.list || []
+    } else {
+      records.value = []
+    }
   } catch (error) {
     console.error('获取消费记录失败:', error)
   } finally {
