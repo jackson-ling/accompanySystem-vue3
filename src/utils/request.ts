@@ -58,7 +58,7 @@ service.interceptors.response.use(
 
       // 处理其他错误（400, 500 等）
       const message = res.msg || res.message || '请求失败'
-      ElMessage.error(message)
+      // 不在这里显示错误，由业务代码处理，避免重复弹窗
       return Promise.reject(new Error(message))
     }
 
@@ -87,9 +87,9 @@ service.interceptors.response.use(
       }
     }
 
-    // 显示错误消息
+    // 显示错误消息（避免重复弹窗，只在这里显示）
     const message = (error.response?.data as any)?.msg || error.message || '请求失败'
-    ElMessage.error(message)
+    // 不在这里显示错误，由业务代码处理，避免重复弹窗
     return Promise.reject(error)
   }
 )
@@ -103,10 +103,15 @@ function handleUnauthorized() {
   // 这里需要延迟导入避免循环依赖
   import('@/stores/user').then(({ useUserStore }) => {
     const userStore = useUserStore()
-    if (userStore.$reset) {
-      userStore.$reset()
-    } else if (userStore.logout) {
+    // setup 语法定义的 store 没有 $reset 方法，直接清除状态
+    if (userStore.logout) {
       userStore.logout()
+    } else if (userStore.$reset) {
+      userStore.$reset()
+    } else {
+      // 手动清除状态
+      userStore.isLogin = false
+      userStore.userInfo = null
     }
   })
 

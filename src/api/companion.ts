@@ -7,7 +7,7 @@ import type {
   IncomeRecord,
   Order,
   PaginatedResult,
-  PageParams
+  PageParams,
 } from '@/types/api'
 
 export interface CompanionListParams extends PageParams {
@@ -23,7 +23,9 @@ export function getCompanions(params?: CompanionListParams) {
 
 /** 获取可接订单列表（抢单大厅） */
 export function getAvailableOrders(params?: PageParams) {
-  return request.get<any, PaginatedResult<AvailableOrder>>('/companion/available-orders', { params })
+  return request.get<any, PaginatedResult<AvailableOrder>>('/companion/available-orders', {
+    params,
+  })
 }
 
 export function getCompanionDetail(id: number) {
@@ -31,11 +33,13 @@ export function getCompanionDetail(id: number) {
 }
 
 export function getCompanionReviews(id: number, params?: PageParams) {
-  return request.get<any, PaginatedResult<CompanionReview>>(`/companions/${id}/comments`, { params })
+  return request.get<any, PaginatedResult<CompanionReview>>(`/companions/${id}/comments`, {
+    params,
+  })
 }
 
 export function toggleCompanionFavorite(id: number) {
-  return request.post<any, void>(`/companions/${id}/favorite`)
+  return request.post<any, boolean>(`/companions/${id}/favorite`)
 }
 
 // 陪诊师工作台相关 API

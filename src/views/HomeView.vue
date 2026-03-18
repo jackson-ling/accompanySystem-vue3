@@ -139,7 +139,7 @@ async function fetchData() {
     ])
 
     if (servicesRes.status === 'fulfilled') {
-      serviceList.value = servicesRes.value
+      serviceList.value = servicesRes.value?.list || []
     }
 
     if (companionsRes.status === 'fulfilled') {

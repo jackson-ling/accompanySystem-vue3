@@ -296,7 +296,7 @@ const handleAccept = async (order: Order) => {
     // 调用 API 接单
     await acceptOrder(String(order.id))
     ElMessage.success('接单成功')
-    // 更新本地状态为待服务(2)
+    // 更新本地状态为已接单(2)
     companionOrderStore.updateLocalStatus(order.id, 2)
     // 刷新待处理订单列表
     await fetchPendingOrders()

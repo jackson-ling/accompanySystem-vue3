@@ -255,7 +255,8 @@ async function fetchCompanionDetail() {
 // 获取服务列表
 async function fetchServices() {
   try {
-    serviceList.value = await getServices()
+    const res = await getServices()
+    serviceList.value = res?.list || res || []
   } catch (error) {
     console.error('获取服务列表失败:', error)
   }

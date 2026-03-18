@@ -10,7 +10,7 @@ export function getUserOrders(params?: UserOrderListParams) {
 }
 
 export function createUserOrder(data: CreateOrderPayload) {
-  return request.post<any, void>('/user/orders', data)
+  return request.post<any, number>('/user/orders', data)
 }
 
 export function getUserOrderDetail(id: string | number) {
@@ -57,7 +57,10 @@ export function startCompanionOrder(id: string | number) {
   return request.put<any, void>(`/companion/orders/${id}/start`)
 }
 
-export function completeCompanionOrder(id: string | number, data: { serviceContent: string; images: string[] }) {
+export function completeCompanionOrder(
+  id: string | number,
+  data: { serviceContent: string; images: string[] },
+) {
   return request.put<any, void>(`/companion/orders/${id}/complete`, data)
 }
 
@@ -69,7 +72,7 @@ export interface AvailableTimeSlot {
 
 // 获取可用时间段
 export function getAvailableTimes(companionId: number, date: string) {
-  return request.get<any, AvailableTimeSlot[]>(`/companion/${companionId}/available-times`, {
+  return request.get<any, AvailableTimeSlot[]>(`/companions/${companionId}/available-times`, {
     params: { date },
   })
 }

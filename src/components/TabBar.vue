@@ -31,55 +31,57 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getUnreadMessageCount } from '@/api/message'
 import { useUserStore } from '@/stores/user'
+import { useMessageStore } from '@/stores/message'
 
 const aiIcon = new URL('../assets/ai-icon.svg', import.meta.url).href
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const messageStore = useMessageStore()
 
-const unreadCount = ref(0)
+// 使用message store中的未读数量
+const unreadCount = computed(() => messageStore.unreadCount)
 
-// 获取未读消息数量
-const fetchUnreadCount = async () => {
-  // 未登录时不请求，直接返回0
-  if (!userStore.isLogin) {
-    unreadCount.value = 0
-    return
-  }
-  try {
-    const count = await getUnreadMessageCount()
-    unreadCount.value = count || 0
-  } catch (error) {
-    console.error('获取未读消息数量失败:', error)
-    unreadCount.value = 0
-  }
-}
+// 定时器引用，用于清理
+let pollTimer: NodeJS.Timeout | null = null
 
 // 监听登录状态变化
 watch(
   () => userStore.isLogin,
   (newVal) => {
     if (newVal) {
-      fetchUnreadCount()
+      // 登录时获取消息会话列表（包含未读数量）
+      messageStore.fetchConversations()
     } else {
-      unreadCount.value = 0
+      // 退出登录时重置消息数据
+      messageStore.resetMessages()
     }
   },
 )
 
 onMounted(() => {
-  fetchUnreadCount()
-  // 每30秒轮询一次未读消息（仅登录状态）
-  setInterval(() => {
+  // 如果已登录，获取消息会话列表（包含未读数量）
+  if (userStore.isLogin) {
+    messageStore.fetchConversations()
+  }
+  // 每30秒轮询一次消息会话列表（仅登录状态）
+  pollTimer = setInterval(() => {
     if (userStore.isLogin) {
-      fetchUnreadCount()
+      messageStore.fetchConversations()
     }
   }, 30000)
+})
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
 })
 
 const currentPath = computed(() => route.path)

@@ -255,7 +255,7 @@ import SlidingSegment from '@/components/UI/SlidingSegment.vue'
 import CompanionSelector from '@/components/appointment/CompanionSelector.vue'
 import { getServices } from '@/api/service'
 import { getCompanions } from '@/api/companion'
-import { getAvailableTimes } from '@/api/order'
+import { getAvailableTimes, createUserOrder, payUserOrder } from '@/api/order'
 import type { ServiceItem } from '@/types/api'
 import type { Companion } from '@/types/api'
 
@@ -324,7 +324,7 @@ async function fetchData() {
     ])
 
     if (servicesRes.status === 'fulfilled') {
-      serviceList.value = servicesRes.value
+      serviceList.value = servicesRes.value?.list || servicesRes.value || []
     }
 
     if (companionsRes.status === 'fulfilled') {
@@ -388,7 +388,7 @@ const formattedServiceTime = computed(() => {
 onMounted(() => {
   // 重置预约时间，确保每次进入都是新的
   appointmentTime.value = ''
-  
+
   fetchData()
   // 刷新用户余额
   userStore.fetchBalance()
@@ -554,12 +554,13 @@ const selectTime = (slot: { time: string; status: string }) => {
   }, 150)
 }
 
-const handlePay = () => {
-  // Remove focus to prevent button from staying in active/focus state (gray)
+const handlePay = async () => {
+  // 移除焦点，防止按钮保持激活状态
   if (payBtnRef.value && payBtnRef.value.$el) {
     payBtnRef.value.$el.blur()
   }
 
+  // 验证必填信息
   if (!selectedService.value) {
     ElMessage.warning('请选择服务项目')
     return
@@ -572,6 +573,10 @@ const handlePay = () => {
     ElMessage.warning('请选择就诊人')
     return
   }
+  if (!selectedCompanion.value) {
+    ElMessage.warning('请选择陪诊师')
+    return
+  }
 
   const loading = ElLoading.service({
     lock: true,
@@ -580,15 +585,93 @@ const handlePay = () => {
     customClass: 'payment-loading-mask',
   })
 
-  setTimeout(() => {
+  try {
+    // 转换接送选项为数字格式（后端要求）
+    const pickupOptionMap: Record<string, number> = {
+      none: 1, // 医院门口
+      pick: 2, // 指定地点接
+      drop: 2, // 指定地点送
+      both: 2, // 指定地点接送
+    }
+
+    // 解析预约时间字符串，转换为标准格式
+    const parseAppointmentTime = (timeStr: string) => {
+      try {
+        // timeStr 格式: "12-17 周二 14:30"
+        const parts = timeStr.split(' ')
+        if (parts.length !== 3) {
+          throw new Error('时间格式错误')
+        }
+
+        const [dateStr, , time] = parts
+        const currentYear = new Date().getFullYear()
+        const [month, day] = dateStr.split('-').map(Number)
+        const [hour, minute] = time.split(':').map(Number)
+
+        const appointmentDate = new Date(currentYear, month - 1, day, hour, minute)
+        // 格式化为 "YYYY-MM-DD HH:mm:ss" 格式
+        const year = appointmentDate.getFullYear()
+        const monthStr = String(appointmentDate.getMonth() + 1).padStart(2, '0')
+        const dayStr = String(appointmentDate.getDate()).padStart(2, '0')
+        const hourStr = String(appointmentDate.getHours()).padStart(2, '0')
+        const minuteStr = String(appointmentDate.getMinutes()).padStart(2, '0')
+        const secondStr = '00'
+
+        return `${year}-${monthStr}-${dayStr} ${hourStr}:${minuteStr}:${secondStr}`
+      } catch (error) {
+        console.error('时间解析失败:', error)
+        // 如果解析失败，使用当前时间加1小时作为默认值
+        const defaultTime = new Date()
+        defaultTime.setHours(defaultTime.getHours() + 1)
+        const year = defaultTime.getFullYear()
+        const month = String(defaultTime.getMonth() + 1).padStart(2, '0')
+        const day = String(defaultTime.getDate()).padStart(2, '0')
+        const hour = String(defaultTime.getHours()).padStart(2, '0')
+        const minute = String(defaultTime.getMinutes()).padStart(2, '0')
+        return `${year}-${month}-${day} ${hour}:${minute}:00`
+      }
+    }
+
+    // 构建订单数据
+    const orderData = {
+      serviceId: selectedService.value.id,
+      companionId: selectedCompanion.value.id,
+      patientId: currentPatient.value.id,
+      hospital: '默认医院', // 这里可以后续添加医院选择功能
+      department: '默认科室', // 这里可以后续添加科室选择功能
+      appointmentTime: parseAppointmentTime(appointmentTime.value),
+      pickupOption: pickupOptionMap[pickupOption.value] || 1,
+      pickupAddress: pickupOption.value !== 'none' ? '用户指定接送地址' : undefined,
+      remarks: remarks.value || null,
+    }
+
+    console.log('创建订单数据:', orderData)
+
+    // 调用创建订单API
+    const orderId = await createUserOrder(orderData)
+
+    // 订单创建成功后，立即调用支付接口
+    if (orderId) {
+      await payUserOrder(orderId, { paymentMethod: paymentMethod.value })
+    }
+
     loading.close()
+
+    // 显示支付成功提示
     ElMessageBox.alert('支付成功！我们将尽快为您安排服务。', '提示', {
       confirmButtonText: '确定',
       callback: () => {
+        // 重置订单状态
+        orderStore.resetOrder()
+        // 跳转到订单列表页面
         router.push({ name: 'order-list', query: { status: '2' } })
       },
     })
-  }, 1500)
+  } catch (error) {
+    loading.close()
+    console.error('创建订单失败:', error)
+    ElMessage.error('支付失败，请重试')
+  }
 }
 </script>
 

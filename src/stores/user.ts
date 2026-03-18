@@ -3,7 +3,13 @@ import { ref } from 'vue'
 import type { Patient, UserProfile } from '@/types/api'
 import { login as loginApi, logout as logoutApi } from '@/api/auth'
 import { getUserProfile, getUserBalance } from '@/api/user'
-import { getPatients, createPatient, updatePatient as updatePatientApi, deletePatient as deletePatientApi, setDefaultPatient } from '@/api/patient'
+import {
+  getPatients,
+  createPatient,
+  updatePatient as updatePatientApi,
+  deletePatient as deletePatientApi,
+  setDefaultPatient,
+} from '@/api/patient'
 
 // 重新导出类型以保持向后兼容
 export type { Patient }
@@ -81,9 +87,17 @@ export const useUserStore = defineStore('user', () => {
     const res = await loginApi({ phone, password })
     // 保存 token
     localStorage.setItem('token', res.token)
-    // 保存用户信息
-    userInfo.value = res.userInfo
+    // 将登录返回的数据转换为 UserProfile 格式
+    userInfo.value = {
+      id: res.userId,
+      nickname: res.nickname,
+      avatar: res.avatar,
+      phone: res.phone,
+      balance: 0, // 登录时余额默认为0，后续通过 fetchProfile 获取完整信息
+    }
     isLogin.value = true
+    // 获取完整的用户信息（包括余额）
+    await fetchProfile()
     // 获取就诊人列表
     await fetchPatients()
     return res

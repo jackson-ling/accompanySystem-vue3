@@ -268,8 +268,6 @@ const handleRegister = async () => {
     await registerApi({
       phone: registerForm.phone,
       password: registerForm.password,
-      nickname: registerForm.phone.slice(-4), // 临时使用手机号后4位作为昵称
-      verifyCode: '123456', // Mock 数据，实际需要从输入框获取
     })
     ElMessage.success('注册成功，请登录')
     mode.value = 'login'
@@ -295,8 +293,7 @@ const handleReset = async () => {
     // 调用重置密码 API
     await resetPasswordApi({
       phone: resetForm.phone,
-      newPassword: resetForm.password,
-      verifyCode: '123456', // Mock 数据，实际需要从输入框获取
+      password: resetForm.password,
     })
     ElMessage.success('密码修改成功，请登录')
     mode.value = 'login'

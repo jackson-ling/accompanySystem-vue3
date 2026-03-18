@@ -225,12 +225,12 @@ onMounted(() => {
 
 // 订单状态映射
 const getStatusInfo = (status: number) => {
-  // status: 2-待服务, 3-服务中, 4-已完成
+  // status: 2-已接单, 7-服务中, 3-已完成
   return (
     {
-      2: { text: '待服务', type: 'pending' },
-      3: { text: '服务中', type: 'pending' }, // 这里的 type 控制颜色，服务中也用 pending 的颜色（或自定义）
-      4: { text: '已完成', type: 'completed' },
+      2: { text: '已接单', type: 'pending' },
+      7: { text: '服务中', type: 'pending' },
+      3: { text: '已完成', type: 'completed' },
     }[status] || { text: '未知', type: '' }
   )
 }
@@ -243,11 +243,11 @@ const filteredOrders = computed(() => {
   })
 
   if (activeTab.value === 'pending') {
-    // 待服务标签下显示：待服务(2) 和 服务中(3)
-    return allOrders.filter((order) => order.status === 2 || order.status === 3)
+    // 待接单标签下显示：已接单(2) 和 服务中(7)
+    return allOrders.filter((order) => order.status === 2 || order.status === 7)
   } else {
-    // 已完成标签下显示：已完成(4)
-    return allOrders.filter((order) => order.status === 4)
+    // 已完成标签下显示：已完成(3)
+    return allOrders.filter((order) => order.status === 3)
   }
 })
 

@@ -9,14 +9,11 @@ export interface LoginPayload {
 export interface RegisterPayload {
   phone: string
   password: string
-  verifyCode: string
-  nickname: string
 }
 
 export interface ResetPasswordPayload {
   phone: string
-  verifyCode: string
-  newPassword: string
+  password: string
 }
 
 export function register(data: RegisterPayload) {

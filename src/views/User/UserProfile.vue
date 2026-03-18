@@ -55,13 +55,13 @@
           </div>
           <span class="label">待服务</span>
         </div>
-        <div class="grid-item" @click="handleProtectedNav('/order/list?status=3')">
+        <div class="grid-item" @click="handleProtectedNav('/order/list?status=7')">
           <div class="icon-wrapper">
             <el-icon :size="28" color="#e6a23c"><Compass /></el-icon>
           </div>
           <span class="label">服务中</span>
         </div>
-        <div class="grid-item" @click="handleProtectedNav('/order/list?status=4')">
+        <div class="grid-item" @click="handleProtectedNav('/order/list?status=3')">
           <div class="icon-wrapper">
             <el-icon :size="28" color="#67c23a"><CircleCheck /></el-icon>
           </div>
@@ -71,7 +71,7 @@
           <div class="icon-wrapper">
             <el-icon :size="28" color="#909399"><RefreshLeft /></el-icon>
           </div>
-          <span class="label">退款/售后</span>
+          <span class="label">退款中</span>
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@
       </div>
 
       <!-- Service Evaluation -->
-      <div class="section-card" v-if="order.status === 4 && !order.clientComment">
+      <div class="section-card" v-if="order.status === 3 && !order.clientComment">
         <div class="card-title">服务评价</div>
 
         <!-- Not Evaluated -->
@@ -157,11 +157,11 @@
         <span class="price">¥{{ order.price }}</span>
       </div>
       <div class="actions">
-        <el-button round v-if="order.status === 1" @click="handleCancel">取消订单</el-button>
+        <el-button round v-if="order.status === 0" @click="handleCancel">取消订单</el-button>
         <el-button
           type="primary"
           round
-          v-if="order.status === 1"
+          v-if="order.status === 0"
           class="primary-btn"
           @click="handlePay"
           >去支付</el-button
@@ -176,12 +176,12 @@
         <el-button
           type="primary"
           round
-          v-if="order.status === 3"
+          v-if="order.status === 7"
           class="primary-btn"
           @click="handleConfirm"
           >确认完成</el-button
         >
-        <el-button round v-if="order.status === 4" @click="handleRefund">申请售后</el-button>
+        <el-button round v-if="order.status === 1 || order.status === 7" @click="handleRefund">申请退款</el-button>
       </div>
     </div>
   </div>
@@ -192,7 +192,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Location, Timer, InfoFilled, ArrowRight } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserOrderDetail, cancelUserOrder, confirmUserOrder, evaluateOrder } from '@/api/order'
+import { getUserOrderDetail, cancelUserOrder, confirmUserOrder, evaluateOrder, payUserOrder, refundUserOrder } from '@/api/order'
 import { getServiceDetail } from '@/api/service'
 import type { Order, ServiceItem } from '@/types/api'
 
@@ -241,33 +241,42 @@ onMounted(() => {
 
 const getStatusText = (status: number) => {
   const map: Record<number, string> = {
-    1: '待付款',
-    2: '待服务',
-    3: '服务中',
-    4: '已完成',
-    5: '退款/售后',
+    0: '待支付',
+    1: '待接单',
+    2: '已接单',
+    3: '已完成',
+    4: '已取消',
+    5: '退款中',
+    6: '已退款',
+    7: '服务中',
   }
   return map[status] || '未知状态'
 }
 
 const getStatusDesc = (status: number) => {
   const map: Record<number, string> = {
-    1: '请在15分钟内完成支付，超时将自动取消',
-    2: '等待陪诊师接单，请保持电话畅通',
-    3: '陪诊师正在为您服务中',
-    4: '服务已完成，期待您的下次光临',
-    5: '正在处理退款/售后申请',
+    0: '请在15分钟内完成支付，超时将自动取消',
+    1: '等待陪诊师接单，请保持电话畅通',
+    2: '陪诊师已接单，请保持电话畅通',
+    3: '服务已完成，期待您的下次光临',
+    4: '订单已取消',
+    5: '正在处理退款申请',
+    6: '退款已完成',
+    7: '陪诊师正在为您服务中',
   }
   return map[status] || ''
 }
 
 const getStatusClass = (status: number) => {
   const map: Record<number, string> = {
-    1: 'status-pending',
+    0: 'status-pending',
+    1: 'status-wait',
     2: 'status-wait',
-    3: 'status-process',
-    4: 'status-success',
+    3: 'status-success',
+    4: 'status-refund',
     5: 'status-refund',
+    6: 'status-refund',
+    7: 'status-process',
   }
   return map[status] || ''
 }
@@ -296,8 +305,26 @@ const handlePay = () => {
       el.blur()
     }, 100)
   }
-  // Mock pay action or navigate to pay page
-  ElMessage.info('跳转支付页面...')
+  ElMessageBox.confirm('请选择支付方式', '支付订单', {
+    confirmButtonText: '微信支付',
+    cancelButtonText: '支付宝',
+    distinguishCancelAndClose: true,
+  }).then(async () => {
+    try {
+      await payUserOrder(orderId, { paymentMethod: 'wechat' })
+      ElMessage.success('支付成功')
+      fetchOrderDetail()
+    } catch (error) {}
+  }).catch((action: string) => {
+    if (action === 'cancel') {
+      payUserOrder(orderId, { paymentMethod: 'alipay' })
+        .then(() => {
+          ElMessage.success('支付成功')
+          fetchOrderDetail()
+        })
+        .catch(() => {})
+    }
+  })
 }
 
 const handleCancel = () => {
@@ -402,7 +429,16 @@ const handleRefund = () => {
       el.blur()
     }, 100)
   }
-  ElMessage.info('售后功能开发中')
+  ElMessageBox.prompt('请输入退款原因', '申请退款', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+  }).then(async ({ value }) => {
+    try {
+      await refundUserOrder(orderId, { reason: value })
+      ElMessage.success('退款申请已提交')
+      fetchOrderDetail()
+    } catch (error) {}
+  }).catch(() => {})
 }
 </script>
 

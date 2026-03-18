@@ -35,9 +35,14 @@ export interface UserProfile {
   balance: number
 }
 
+// 登录/注册返回的数据结构（与后端LoginVo保持一致）
 export interface AuthResult {
   token: string
-  userInfo: UserProfile
+  userId: number
+  nickname: string
+  avatar: string
+  userType: number
+  phone: string
 }
 
 export interface Patient {
@@ -145,21 +150,32 @@ export interface CreateOrderPayload {
   patientId: number
   hospital: string
   department: string
-  appointmentTime: string
-  pickupOption: string
+  appointmentTime: string // 格式: "2026-03-17 15:00:00"
+  pickupOption: number // 1-医院门口, 2-指定地点
+  pickupAddress?: string // pickupOption=2时必填
   remarks?: string
-  paymentMethod?: string
 }
 
 export interface MessageConversation {
   id: string
   type: string
   name: string
-  time: string
-  preview: string
+  lastMessageTime: string // 后端返回的字段名
+  lastMessage: string // 后端返回的字段名
   icon?: string
   avatar?: string
   unreadCount?: number
+  targetId?: number
+}
+
+// 前端展示用的扩展类型
+export interface MessageConversationDisplay extends Omit<
+  MessageConversation,
+  'lastMessage' | 'lastMessageTime'
+> {
+  time: string // 用于前端显示的时间
+  preview: string // 用于前端显示的消息预览
+  bgColor?: string
 }
 
 export interface ChatMessage {

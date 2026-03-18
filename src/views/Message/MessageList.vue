@@ -14,7 +14,10 @@
         class="message-item"
         @click="handleItemClick(item)"
       >
-        <div class="icon-box-wrapper" :style="item.bgColor ? { backgroundColor: item.bgColor } : {}">
+        <div
+          class="icon-box-wrapper"
+          :style="item.bgColor ? { backgroundColor: item.bgColor } : {}"
+        >
           <div class="icon-box">
             <el-icon v-if="item.icon" :size="28" color="#fff">
               <component :is="iconMap[item.icon]" />
@@ -52,7 +55,6 @@ import { onMounted } from 'vue'
 import { Headset, Bell, ArrowLeft } from '@element-plus/icons-vue'
 import { useMessageStore } from '@/stores/message'
 import { storeToRefs } from 'pinia'
-import { markMessageRead } from '@/api/message'
 
 const router = useRouter()
 const messageStore = useMessageStore()
@@ -78,9 +80,8 @@ const handleItemClick = async (item: any) => {
   // 如果有未读消息，标记已读
   if (item.unreadCount && item.unreadCount > 0) {
     try {
-      await markMessageRead(id)
-      // 更新本地状态
-      item.unreadCount = 0
+      // 使用message store的markAsRead方法，会自动更新未读数量
+      await messageStore.markAsRead(id)
     } catch (error) {
       console.error('标记已读失败:', error)
     }
@@ -92,7 +93,13 @@ const handleItemClick = async (item: any) => {
     } else if (type === 'system') {
       router.push('/message/chat/system')
     } else if (type === 'companion') {
-      router.push('/message/chat/companion')
+      // 传递targetId作为查询参数
+      const targetId = item.targetId
+      if (targetId) {
+        router.push(`/message/chat/companion?targetId=${targetId}`)
+      } else {
+        router.push('/message/chat/companion')
+      }
     }
   } catch (error) {
     console.error('Navigation error:', error)

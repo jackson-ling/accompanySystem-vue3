@@ -125,17 +125,20 @@ const loading = ref(false)
 
 // 筛选条件映射到 API 参数
 const sortMap = {
-  smart: 'sales_desc',      // 智能排序 → 销量优先
+  smart: '',                // 智能排序 → 默认排序（按创建时间）
   sales: 'sales_desc',      // 销量优先
-  price: 'price_asc',       // 低价优先
+  price: 'price_asc',      // 低价优先
 }
 
 // 获取服务数据
 async function fetchServices() {
   loading.value = true
   try {
-    const sort = sortMap[currentSort.value as keyof typeof sortMap] as 'price_asc' | 'price_desc' | 'sales_desc'
-    allServices.value = await getServices({ type: type.value as 'companion' | 'agency', sort })
+    const sort = sortMap[currentSort.value as keyof typeof sortMap]
+    const params: any = { type: type.value as 'companion' | 'agency' }
+    if (sort) params.sort = sort
+    const res = await getServices(params)
+    allServices.value = res?.list || res || []
   } catch (error) {
     console.error('获取服务列表失败:', error)
   } finally {
@@ -155,6 +158,11 @@ async function fetchCompanions() {
 
 // 切换排序时重新获取数据
 watch(currentSort, () => {
+  fetchServices()
+})
+
+// 切换服务类型时重新获取数据
+watch(type, () => {
   fetchServices()
 })
 
@@ -188,10 +196,21 @@ const bookCompanion = (companion: any) => {
 }
 
 onMounted(() => {
+  // 初始化 type
   type.value = (route.query.type as string) || 'companion'
   fetchServices()
   fetchCompanions()
 })
+
+// 监听路由参数变化
+watch(
+  () => route.query.type,
+  (newType) => {
+    if (newType) {
+      type.value = newType as string
+    }
+  }
+)
 </script>
 
 <style scoped lang="scss">

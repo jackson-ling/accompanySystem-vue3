@@ -13,15 +13,15 @@
       <div class="status-card">
         <div class="status-icon">
           <el-icon :size="40" color="#e6a23c" v-if="order.status === 2"><Clock /></el-icon>
-          <el-icon :size="40" color="#409eff" v-else-if="order.status === 3"><Timer /></el-icon>
-          <el-icon :size="40" color="#67c23a" v-else-if="order.status === 4"
+          <el-icon :size="40" color="#409eff" v-else-if="order.status === 7"><Timer /></el-icon>
+          <el-icon :size="40" color="#67c23a" v-else-if="order.status === 3"
             ><CircleCheckFilled
           /></el-icon>
         </div>
         <div class="status-text">{{ getStatusText(order.status) }}</div>
         <div class="status-desc" v-if="order.status === 2">请在预约时间前到达医院</div>
-        <div class="status-desc" v-else-if="order.status === 3">请准时到达医院提供服务</div>
-        <div class="status-desc" v-else-if="order.status === 4">服务已完成，期待您的下次服务</div>
+        <div class="status-desc" v-else-if="order.status === 7">请准时到达医院提供服务</div>
+        <div class="status-desc" v-else-if="order.status === 3">服务已完成，期待您的下次服务</div>
       </div>
 
       <!-- Service Info -->
@@ -85,7 +85,7 @@
       </div>
 
       <!-- User Review -->
-      <div class="info-card" v-if="order.status === 4 && order.clientComment">
+      <div class="info-card" v-if="order.status === 3 && order.clientComment">
         <div class="card-title">用户评价</div>
         <div class="comment-item">
           <div class="comment-header">
@@ -108,14 +108,14 @@
     </div>
 
     <!-- Bottom Action Bar -->
-    <div class="bottom-bar" v-if="order && (order.status === 2 || order.status === 3)">
+    <div class="bottom-bar" v-if="order && (order.status === 2 || order.status === 7)">
       <template v-if="order.status === 2">
         <el-button class="action-btn" plain round @click="contactUser">联系客户</el-button>
         <el-button class="action-btn" type="primary" round @click="startService()">
           开始服务
         </el-button>
       </template>
-      <div v-else-if="order.status === 3" class="slide-verify" ref="sliderContainer">
+      <div v-else-if="order.status === 7" class="slide-verify" ref="sliderContainer">
         <div class="slide-track">
           <div class="slide-text">右滑结束服务</div>
         </div>
@@ -155,7 +155,7 @@ import {
   StarFilled,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getCompanionOrderDetail, completeCompanionOrder } from '@/api/order'
+import { getCompanionOrderDetail, completeCompanionOrder, startCompanionOrder } from '@/api/order'
 import type { Order } from '@/types/api'
 import { useCompanionOrderStore } from '@/stores/companionOrder'
 
@@ -213,11 +213,14 @@ onMounted(() => {
 // 状态映射
 const getStatusText = (status: number) => {
   const map: Record<number, string> = {
-    1: '待付款',
-    2: '待服务',
-    3: '服务中',
-    4: '已完成',
-    5: '退款/售后',
+    0: '待支付',
+    1: '待接单',
+    2: '已接单',
+    3: '已完成',
+    4: '已取消',
+    5: '退款中',
+    6: '已退款',
+    7: '服务中',
   }
   return map[status] || '未知状态'
 }
@@ -230,14 +233,17 @@ const contactUser = () => {
   router.push('/messages')
 }
 
-const startService = () => {
-  if (order.value) {
-    order.value.status = 3
-    // @ts-ignore
-    const key = order.value._uniqueId || order.value.id
-    companionOrderStore.updateLocalStatus(key, 3)
-  }
-  ElMessage.success('开始服务打卡成功')
+const startService = async () => {
+  try {
+    await startCompanionOrder(orderId)
+    if (order.value) {
+      order.value.status = 7
+      // @ts-ignore
+      const key = order.value._uniqueId || order.value.id
+      companionOrderStore.updateLocalStatus(key, 7)
+    }
+    ElMessage.success('开始服务打卡成功')
+  } catch (error) {}
 }
 
 const completeService = async () => {

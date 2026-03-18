@@ -127,7 +127,7 @@ const fetchServices = async () => {
   loading.value = true
   try {
     const res = await getServices()
-    allServices.value = res
+    allServices.value = res?.list || res || []
   } catch (error) {
     console.error('获取服务列表失败:', error)
   } finally {

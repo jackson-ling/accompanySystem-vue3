@@ -174,8 +174,10 @@ const handleMenuAction = (command: string) => {
 
         if (type) {
           try {
+            // 获取targetId
+            const targetId = route.query.targetId ? Number(route.query.targetId) : undefined
             // 调用API删除聊天
-            await deleteChat(type)
+            await deleteChat(type, targetId)
           } catch (error) {
             ElMessage.error('删除聊天失败')
           }
@@ -210,10 +212,11 @@ const sendMessage = async () => {
   await scrollToBottom()
 
   // 调用API发送消息
+  const targetId = route.query.targetId ? Number(route.query.targetId) : undefined
   try {
-    await sendChatMessage(type, { text: userQuery, type: 'text' })
+    await sendChatMessage(type, { text: userQuery, type: 'text' }, targetId)
     // 发送成功后，刷新消息列表获取最新回复
-    await messageStore.fetchChatHistory(type)
+    await messageStore.fetchChatHistory(type, targetId)
     await scrollToBottom()
   } catch (error) {
     console.error('发送消息失败:', error)
@@ -231,7 +234,8 @@ const scrollToBottom = async () => {
 onMounted(() => {
   // 获取聊天历史
   const type = Array.isArray(chatType.value) ? chatType.value[0] : chatType.value
-  messageStore.fetchChatHistory(type)
+  const targetId = route.query.targetId ? Number(route.query.targetId) : undefined
+  messageStore.fetchChatHistory(type, targetId)
   scrollToBottom()
 })
 </script>
